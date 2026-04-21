@@ -1,32 +1,45 @@
 export default async function handler(req, res) {
-  // Cấu hình CORS cho phép giao diện gọi được API
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+// Cấu hình CORS cho phép truy cập từ client
+res.setHeader('Access-Control-Allow-Origin', '*');
+res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Xử lý pre-flight request từ trình duyệt
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  
-  // Chặn các request không phải POST
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+// Xử lý preflight request
+if (req.method === 'OPTIONS') {
+return res.status(200).end();
+}
 
-  // Lấy API Key từ biến môi trường của Vercel (GEMINI_API_KEY)
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'Thiếu API Key cấu hình trên Vercel. Hãy kiểm tra lại phần Environment Variables.' });
+// Chỉ cho phép phương thức POST
+if (req.method !== 'POST') {
+return res.status(405).json({ error: 'Phương thức không được hỗ trợ. Chỉ dùng POST.' });
+}
 
-  try {
-    // Gọi thẳng sang máy chủ Google Gemini
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(req.body),
-    });
+// Lấy API Key từ biến môi trường của Vercel
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+return res.status(500).json({ error: 'Lỗi Server: Thiếu GEMINI_API_KEY trong cấu hình Vercel.' });
+}
 
-    const data = await response.json();
-    return res.status(response.status).json(data);
-  } catch (err) {
-    return res.status(500).json({ error: 'Lỗi Proxy Server', detail: err.message });
-  }
+try {
+// Gọi đến API của Google Gemini
+// Dùng model gemini-2.5-flash (ổn định, không cần preview date)
+const response = await fetch(
+`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+{
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+},
+body: JSON.stringify(req.body),
+}
+);
+
+const data = await response.json();
+
+// Trả về kết quả cho Frontend
+return res.status(response.status).json(data);
+} catch (err) {
+console.error("Lỗi khi gọi Gemini API:", err);
+return res.status(500).json({ error: 'Lỗi Proxy Server kết nối đến Gemini', detail: err.message });
+}
 }
