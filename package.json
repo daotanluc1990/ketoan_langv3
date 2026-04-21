@@ -1,0 +1,9 @@
+{
+  "name": "ketoan-comtamlang",
+  "version": "1.0.0",
+  "description": "Hệ thống vận hành Kế toán — Cơm Tấm Làng",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}

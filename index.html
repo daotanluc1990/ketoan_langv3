@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vận Hành Kế Toán — Cơm Tấm Làng</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg0:#ffffff; --bg1:#f7f6f3; --bg2:#edecea; --bg3:#e4e2de;
+  --ink0:#181816; --ink1:#4a4945; --ink2:#7a7870; --ink3:#a8a69e;
+  --blue:#1a5fa8; --blue-bg:#e8f1fb; --blue-bd:rgba(26,95,168,.25);
+  --green:#2e6b0a; --green-bg:#e8f4da; --green-bd:rgba(46,107,10,.25);
+  --amber:#7a4a08; --amber-bg:#faecd6; --amber-bd:rgba(122,74,8,.25);
+  --red:#9e2a2a; --red-bg:#fbebeb; --red-bd:rgba(158,42,42,.25);
+  --purple:#5040b0; --purple-bg:#eeebfc; --purple-bd:rgba(80,64,176,.25);
+  --r4:4px; --r8:8px; --r12:12px; --r16:16px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg2);color:var(--ink0);font-size:14px;line-height:1.5}
+/* BỐ CỤC */
+.shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:232px;min-width:232px;background:var(--bg0);border-right:1px solid var(--bg3);display:flex;flex-direction:column;overflow:hidden}
+.main{flex:1;overflow-y:auto;background:var(--bg2)}
+/* TIÊU ĐỀ THANH BÊN */
+.s-head{padding:18px 16px 14px;border-bottom:1px solid var(--bg3)}
+.s-brand{font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--ink2);text-transform:uppercase;margin-bottom:4px}
+.s-store{font-size:15px;font-weight:600;color:var(--ink0);margin-bottom:8px}
+.s-clock{font-size:22px;font-weight:300;color:var(--ink0);letter-spacing:.02em;font-variant-numeric:tabular-nums;margin-bottom:2px}
+.s-date{font-size:11px;color:var(--ink2)}
+/* HUY HIỆU VAI TRÒ */
+.role-row{display:flex;align-items:center;gap:6px;margin-top:10px}
+.role-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.03em;cursor:pointer;border:none;transition:all .15s}
+.role-pill.staff{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
+.role-pill.admin{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-bd)}
+.role-pill:hover{opacity:.8}
+/* NAV */
+.nav{padding:8px;flex:1;overflow-y:auto}
+.nav-group{font-size:10px;font-weight:600;color:var(--ink3);letter-spacing:.1em;text-transform:uppercase;padding:14px 8px 5px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r8);cursor:pointer;font-size:13px;color:var(--ink1);transition:all .12s;margin-bottom:1px;position:relative}
+.nav-item:hover{background:var(--bg1);color:var(--ink0)}
+.nav-item.active{background:var(--blue-bg);color:var(--blue);font-weight:600}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.7}
+.nav-item.active svg{opacity:1}
+.nav-badge{margin-left:auto;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:700}
+.nb-warn{background:var(--amber-bg);color:var(--amber)}
+.nb-danger{background:var(--red-bg);color:var(--red)}
+/* TRANG */
+.page{display:none;padding:24px;min-height:100%}
+.page.active{display:block}
+.ph{margin-bottom:22px}
+.ph-title{font-size:20px;font-weight:700;color:var(--ink0)}
+.ph-sub{font-size:13px;color:var(--ink2);margin-top:3px}
+/* THẺ */
+.card{background:var(--bg0);border:1px solid var(--bg3);border-radius:var(--r12);padding:16px 18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card-hd{font-size:13px;font-weight:600;color:var(--ink0);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card-hd svg{width:14px;height:14px;color:var(--ink2);flex-shrink:0}
+/* THỐNG KÊ BẢNG ĐIỀU KHIỂN */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--bg0);border:1px solid var(--bg3);border-radius:var(--r8);padding:12px 14px;box-shadow:var(--shadow)}
+.stat-lbl{font-size:11px;color:var(--ink2);font-weight:500;margin-bottom:4px}
+.stat-val{font-size:24px;font-weight:700;color:var(--ink0);line-height:1}
+.stat-val.g{color:var(--green)}.stat-val.a{color:var(--amber)}.stat-val.r{color:var(--red)}
+/* TIẾN TRÌNH */
+.prog-wrap{margin-bottom:20px}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.prog-label{font-size:12px;color:var(--ink2)}
+.prog-pct{font-size:12px;font-weight:700;color:var(--blue)}
+.prog-bar{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .4s ease}
+/* HUY HIỆU TRẠNG THÁI CA */
+.ca-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.ca-sang{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
+.ca-toi{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-bd)}
+/* DANH SÁCH NHIỆM VỤ (BẢNG ĐIỀU KHIỂN) */
+.task-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r8);border:1px solid var(--bg3);background:var(--bg0);cursor:pointer;transition:all .12s;margin-bottom:6px}
+.task-row:hover{border-color:var(--blue-bd);background:var(--blue-bg)}
+.task-row.is-done{opacity:.55}
+.task-row.is-active{border-color:var(--blue-bd);background:var(--blue-bg)}
+.task-row.is-late{border-color:var(--red-bd);background:var(--red-bg)}
+.tr-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px}
+.is-done .tr-check{background:var(--green);border-color:var(--green);color:#fff}
+.tr-time{font-size:11px;color:var(--ink2);width:38px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.tr-name{font-size:13px;color:var(--ink0);flex:1;font-weight:500}
+.tr-tag{font-size:10px;padding:2px 7px;border-radius:10px;flex-shrink:0;font-weight:600}
+.tag-done{background:var(--green-bg);color:var(--green)}
+.tag-active{background:var(--blue-bg);color:var(--blue)}
+.tag-wait{background:var(--amber-bg);color:var(--amber)}
+.tag-late{background:var(--red-bg);color:var(--red)}
+/* HAI CỘT */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+/* HÀNG CẢNH BÁO */
+.alert-row{display:flex;flex-direction:column;gap:6px}
+.alert-item{padding:9px 12px;border-radius:var(--r8);font-size:12px;font-weight:500;border-left:3px solid}
+.ai-warn{background:var(--amber-bg);color:var(--amber);border-color:var(--amber)}
+.ai-info{background:var(--blue-bg);color:var(--blue);border-color:var(--blue)}
+.ai-ok{background:var(--green-bg);color:var(--green);border-color:var(--green)}
+/* THẺ ĐỐI SOÁT */
+.handover-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.hv-field{background:var(--bg1);border:1px solid var(--bg3);border-radius:var(--r8);padding:10px 12px}
+.hv-label{font-size:10px;font-weight:600;color:var(--ink2);letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
+.hv-val{font-size:15px;font-weight:700;color:var(--ink0)}
+.hv-val.money{color:var(--green)}
+.hv-val.warn{color:var(--amber)}
+.hv-val.danger{color:var(--red)}
+/* EXCEL TABLE */
+.excel-table-wrap{overflow-x:auto;border:1px solid var(--bg3);border-radius:var(--r8);background:var(--bg0);margin-top:14px}
+.excel-table{width:100%;border-collapse:collapse;font-size:12px}
+.excel-table th{background:var(--bg1);color:var(--ink1);font-weight:600;text-align:left;padding:10px 12px;border-bottom:1px solid var(--bg3);border-right:1px solid var(--bg3)}
+.excel-table td{padding:10px 12px;border-bottom:1px solid var(--bg3);border-right:1px solid var(--bg3);color:var(--ink0)}
+.excel-table th:last-child,.excel-table td:last-child{border-right:none}
+.excel-table tr:last-child td{border-bottom:none}
+.td-money{font-variant-numeric:tabular-nums;text-align:right}
+/* INPUT TRONG BẢNG */
+.inline-input{width: 100%; padding: 6px 8px; border: 1px solid var(--bg3); border-radius: var(--r4); font-size: 12px; font-family: inherit;}
+.inline-input:focus{outline: none; border-color: var(--blue);}
+/* TRANG NHIỆM VỤ */
+.task-pg{display:grid;grid-template-columns:260px 1fr; gap: 14px;} 
+.tl-panel{background:var(--bg0);border:1px solid var(--bg3);border-radius:var(--r12);overflow:hidden;box-shadow:var(--shadow)}
+.tl-head{padding:12px 14px;border-bottom:1px solid var(--bg3);font-size:12px;font-weight:600;color:var(--ink2);display:flex;align-items:center;justify-content:space-between}
+.tl-filter{display:flex;gap:4px;padding:8px;border-bottom:1px solid var(--bg3)}
+.tl-f-btn{flex:1;padding:5px;border-radius:var(--r4);font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--ink2);transition:all .1s}
+.tl-f-btn.active{background:var(--blue-bg);color:var(--blue)}
+.tl-item{padding:11px 14px;border-bottom:1px solid var(--bg3);cursor:pointer;transition:background .1s}
+.tl-item:last-child{border-bottom:none}
+.tl-item:hover{background:var(--bg1)}
+.tl-item.sel{background:var(--blue-bg)}
+.tl-item-top{display:flex;align-items:center;gap:8px}
+.tli-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-done{background:var(--green)}.dot-active{background:var(--blue)}.dot-wait{background:var(--amber)}.dot-late{background:var(--red)}
+.tli-name{font-size:13px;font-weight:600;color:var(--ink0);flex:1}
+.tli-time{font-size:11px;color:var(--ink2);margin-top:2px;padding-left:16px}
+/* CHI TIẾT NHIỆM VỤ */
+.td-panel{background:var(--bg0);border:1px solid var(--bg3);border-radius:var(--r12);padding:20px;box-shadow:var(--shadow)}
+.td-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px}
+.td-title{font-size:17px;font-weight:700;color:var(--ink0)}
+.td-meta{font-size:12px;color:var(--ink2);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.td-desc{font-size:13px;color:var(--ink1);line-height:1.6;margin-bottom:18px;padding:10px 12px;background:var(--bg1);border-radius:var(--r8);border-left:3px solid var(--blue-bd)}
+.sec-label{font-size:10px;font-weight:700;color:var(--ink2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;margin-top:18px}
+/* FLOW */
+.flow-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:6px}
+.f-node{padding:7px 13px;border-radius:var(--r8);font-size:12px;cursor:pointer;font-weight:500;border:1px solid var(--bg3);background:var(--bg1);color:var(--ink0);transition:all .12s;white-space:nowrap}
+.f-node:hover{background:var(--blue-bg);border-color:var(--blue-bd);color:var(--blue)}
+.f-node.f-dec{background:var(--amber-bg);border-color:var(--amber-bd);color:var(--amber)}
+.f-node.f-end{background:var(--green-bg);border-color:var(--green-bd);color:var(--green)}
+.f-node.f-start{background:var(--blue-bg);border-color:var(--blue-bd);color:var(--blue)}
+.f-arr{color:var(--ink3);font-size:13px}
+.flow-detail-box{background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:var(--r8);padding:12px;margin-top:8px;margin-bottom:4px;display:none}
+.flow-detail-box.vis{display:block}
+.fdb-title{font-size:12px;font-weight:700;color:var(--blue);margin-bottom:5px}
+.fdb-body{font-size:12px;color:var(--ink0);line-height:1.7;white-space:pre-line}
+/* NHÁNH */
+.branch-box{border:1px solid var(--amber-bd);border-radius:var(--r8);padding:10px 12px;background:var(--amber-bg);margin-bottom:10px}
+.branch-title{font-size:11px;font-weight:700;color:var(--amber);margin-bottom:7px}
+.branch-opts{display:flex;flex-wrap:wrap;gap:6px}
+.b-opt{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:var(--r8);background:var(--bg0);border:1px solid var(--bg3);font-size:12px;cursor:pointer;transition:all .1s}
+.b-opt:hover{background:var(--bg1)}
+.b-cond{font-weight:600;color:var(--ink0)}
+.b-arr{color:var(--ink3)}
+.b-act{color:var(--ink1)}
+/* DANH SÁCH KIỂM TRA */
+.ck-list{display:flex;flex-direction:column;gap:5px}
+.ck-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r8);border:1px solid var(--bg3);cursor:pointer;transition:all .1s;user-select:none}
+.ck-item:hover{background:var(--bg1)}
+.ck-item.done{background:var(--green-bg);border-color:var(--green-bd)}
+.ck-box{width:17px;height:17px;border:2px solid var(--bg3);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .1s}
+.ck-item.done .ck-box{background:var(--green);border-color:var(--green);color:#fff}
+.ck-label{font-size:13px;color:var(--ink0)}
+.ck-item.done .ck-label{color:var(--green);text-decoration:line-through}
+/* TIÊU CHUẨN */
+.std-list{display:flex;flex-direction:column;gap:5px}
+.std-item{display:flex;gap:10px;font-size:12px;padding:7px 10px;border-left:3px solid var(--blue-bd);background:var(--blue-bg);border-radius:0 var(--r8) var(--r8) 0}
+.std-k{font-weight:700;color:var(--ink1);flex-shrink:0;min-width:120px}
+.std-v{color:var(--ink0)}
+/* CÁC TRƯỜNG HỢP */
+.sc-list{display:flex;flex-direction:column;gap:6px}
+.sc-item{border:1px solid var(--bg3);border-radius:var(--r8);overflow:hidden}
+.sc-q{padding:9px 12px;font-size:12px;font-weight:700;color:var(--amber);background:var(--amber-bg);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sc-q .sc-icon{font-size:10px;flex-shrink:0;transition:transform .15s}
+.sc-item.open .sc-q .sc-icon{transform:rotate(180deg)}
+.sc-a{display:none;padding:10px 12px;font-size:12px;color:var(--ink0);line-height:1.7;border-top:1px solid var(--bg3);background:var(--bg0)}
+.sc-item.open .sc-a{display:block}
+/* THANH HÀNH ĐỘNG */
+.act-bar{display:flex;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--bg3)}
+.btn{padding:9px 16px;border-radius:var(--r8);font-size:13px;cursor:pointer;border:1px solid var(--bg3);background:var(--bg1);color:var(--ink0);font-weight:500;transition:all .12s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--bg2)}
+.btn-green{background:var(--green-bg);border-color:var(--green-bd);color:var(--green)}
+.btn-green:hover{background:#d8edbe}
+.btn-blue{background:var(--blue-bg);border-color:var(--blue-bd);color:var(--blue)}
+.btn-blue:hover{background:#d4e6f8}
+.btn-red{background:var(--red-bg);border-color:var(--red-bd);color:var(--red)}
+.edit-badge{font-size:11px;padding:2px 8px;border-radius:var(--r4);background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd);cursor:pointer;font-weight:600}
+/* TIẾN TRÌNH DANH SÁCH KIỂM TRA */
+.ck-prog{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ck-prog-bar{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.ck-prog-fill{height:100%;background:var(--blue);transition:width .3s}
+.ck-prog-txt{font-size:11px;font-weight:700;color:var(--blue);min-width:28px;text-align:right}
+/* Lưới SOP */
+.sop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.sop-card{background:var(--bg0);border:1px solid var(--bg3);border-radius:var(--r12);padding:14px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow)}
+.sop-card:hover{border-color:var(--blue-bd);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.sop-cat{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.sop-name{font-size:14px;font-weight:700;color:var(--ink0);margin-bottom:3px}
+.sop-meta{font-size:11px;color:var(--ink2)}
+.sop-step{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--bg3)}
+.sop-step:last-child{border-bottom:none}
+.sop-num{width:24px;height:24px;border-radius:50%;background:var(--blue-bg);color:var(--blue);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sop-step-title{font-size:13px;font-weight:700;color:var(--ink0)}
+.sop-step-body{font-size:12px;color:var(--ink1);margin-top:2px;line-height:1.5}
+.sop-note{padding:8px 12px;background:var(--amber-bg);border-radius:var(--r8);font-size:12px;color:var(--amber);margin-top:10px;font-weight:500}
+/* NÚT QUAY LẠI */
+.back-btn{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--ink2);cursor:pointer;margin-bottom:14px;padding:5px 8px;border-radius:var(--r8)}
+.back-btn:hover{background:var(--bg1);color:var(--ink0)}
+/* Luồng TRANG */
+.flow-section-title{font-size:13px;font-weight:700;color:var(--ink0);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.flow-legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.fl-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink1)}
+.fl-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+/* HOÃN LẠI */
+.rep-field{margin-bottom:12px}
+.rep-label{font-size:11px;font-weight:700;color:var(--ink1);letter-spacing:.04em;margin-bottom:5px;display:block;text-transform:uppercase}
+.rep-select,.rep-input,.rep-textarea{width:100%;padding:9px 11px;border:1px solid var(--bg3);border-radius:var(--r8);font-size:13px;background:var(--bg1);color:var(--ink0);transition:border .12s}
+.rep-select:focus,.rep-input:focus,.rep-textarea:focus{outline:none;border-color:var(--blue-bd);background:var(--bg0)}
+.rep-textarea{min-height:80px;resize:vertical}
+.rep-history{display:flex;flex-direction:column;gap:8px}
+.rh-item{padding:10px 12px;border-radius:var(--r8);border:1px solid var(--bg3);background:var(--bg0)}
+.rh-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.rh-name{font-size:13px;font-weight:600;color:var(--ink0)}
+.rh-meta{font-size:11px;color:var(--ink2)}
+.rh-note{font-size:12px;color:var(--amber);margin-top:3px}
+/* LỊCH TRÌNH */
+.sch-row{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:var(--r8);border:1px solid var(--bg3);background:var(--bg0);margin-bottom:5px}
+.sch-time{font-size:12px;font-weight:700;color:var(--blue);width:46px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.sch-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sd-daily{background:var(--green)} .sd-shift{background:var(--blue)} .sd-end{background:var(--amber)}
+.sch-name{font-size:13px;color:var(--ink0);flex:1;font-weight:500}
+.sch-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px}
+/* TÀI LIỆU */
+.doc-row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r8);border:1px solid var(--bg3);background:var(--bg0);cursor:pointer;transition:all .12s;margin-bottom:6px}
+.doc-row:hover{border-color:var(--blue-bd);background:var(--blue-bg)}
+.doc-ico{width:34px;height:34px;border-radius:var(--r8);background:var(--blue-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.doc-name{font-size:13px;font-weight:600;color:var(--ink0)}
+.doc-sub{font-size:11px;color:var(--ink2);margin-top:1px}
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--ink0);color:#fff;padding:10px 16px;border-radius:var(--r8);font-size:13px;font-weight:500;z-index:999;display:none;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.toast.show{display:flex}
+/* TRÒ CHUYỆN AI */
+.ai-msg{display:flex;gap:8px;align-items:flex-start}
+.ai-msg-user{flex-direction:row-reverse}
+.ai-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.ai-msg-bot .ai-avatar{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-bd)}
+.ai-msg-user .ai-avatar{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
+.ai-bubble{padding:10px 13px;border-radius:12px;font-size:13px;line-height:1.65;max-width:480px}
+.ai-msg-bot .ai-bubble{background:var(--bg1);border:1px solid var(--bg3);color:var(--ink0);border-top-left-radius:3px}
+.ai-msg-user .ai-bubble{background:var(--blue-bg);border:1px solid var(--blue-bd);color:var(--ink0);border-top-right-radius:3px}
+.ai-typing{display:flex;gap:4px;align-items:center;padding:10px 13px}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--ink3);animation:blink 1.2s infinite}
+.ai-dot:nth-child(2){animation-delay:.2s}
+.ai-dot:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.ai-quick{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--purple-bd);background:var(--purple-bg);color:var(--purple);cursor:pointer;white-space:nowrap;transition:all .1s}
+.ai-quick:hover{opacity:.75}
+.ai-topic{padding:8px 12px;border-radius:var(--r8);font-size:12px;color:var(--ink1);cursor:pointer;border:1px solid var(--bg3);background:var(--bg1);transition:all .1s;font-weight:500}
+.ai-topic:hover{background:var(--purple-bg);border-color:var(--purple-bd);color:var(--purple)}
+.ai-analysis-item{padding:8px; border-radius: var(--r8); margin-top: 5px;}
+.ai-ana-ok{background:var(--green-bg);border:1px solid var(--green-bd);color:var(--green)}
+.ai-ana-warn{background:var(--amber-bg);border:1px solid var(--amber-bd);color:var(--amber)}
+.ai-ana-info{background:var(--blue-bg);border:1px solid var(--blue-bd);color:var(--blue)}
+/* MÀU SẮC TRẠNG THÁI */
+.text-green{color:var(--green)}.text-amber{color:var(--amber)}.text-red{color:var(--red)}.text-blue{color:var(--blue)}
+strong{font-weight:700}
+</style>
+</head>
+<body>
+<div class="shell">
+<!-- THANH BÊN -->
+<aside class="sidebar">
+<div class="s-head">
+<div class="s-brand">Cơm Tấm Làng</div>
+<div class="s-clock" id="clock">--:--:--</div>
+<div class="s-date" id="sdate"></div>
+<div class="role-row">
+<button class="role-pill staff" id="role-pill" onclick="toggleRole()">
+<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 13c0-3 2.686-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+<span id="role-label">KT Chi nhánh</span>
+</button>
+<span style="font-size:11px;color:var(--ink3);cursor:pointer" onclick="toggleRole()">→ <span id="switch-to">KT Trưởng</span></span>
+</div>
+</div>
+<nav class="nav">
+<div class="nav-group">Nghiệp vụ kế toán</div>
+<div class="nav-item active" onclick="go('dashboard')">
+<svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+Bảng điều khiển
+</div>
+<div class="nav-item" onclick="go('tasks')">
+<svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+Danh sách đối soát
+<span class="nav-badge nb-warn" id="badge-tasks">3</span>
+</div>
+<div class="nav-item" onclick="go('sop')">
+<svg viewBox="0 0 16 16" fill="none"><path d="M4 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3"/><path d="M5 6h6M5 9h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+Quy định nội bộ
+</div>
+<div class="nav-item" onclick="go('flow')">
+<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3" r="1.5" stroke="currentColor" stroke-width="1.3"/><circle cx="3" cy="10" r="1.5" stroke="currentColor" stroke-width="1.3"/><circle cx="13" cy="10" r="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 4.5v3M8 7.5l-3.5 1M8 7.5l3.5 1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+Luồng làm việc
+</div>
+<div class="nav-group">Kiểm soát & Báo cáo</div>
+<div class="nav-item" onclick="go('handover')">
+<svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+Báo cáo Đối soát
+<span class="nav-badge nb-danger" id="badge-hv" style="display:none">!</span>
+</div>
+<div class="nav-item" onclick="go('report')">
+<svg viewBox="0 0 16 16" fill="none"><path d="M2 12l4-4 3 3 5-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+Gửi Báo cáo
+</div>
+<div class="nav-item" onclick="go('schedule')">
+<svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5 2v2M11 2v2M2 7h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+Lịch & Deadline
+</div>
+<div class="nav-group">Dữ liệu & Tiêu chuẩn</div>
+<div class="nav-item" onclick="go('docs')">
+<svg viewBox="0 0 16 16" fill="none"><path d="M3 2h7l3 3v9a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3"/><path d="M10 2v3h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+Biểu mẫu & Định mức
+</div>
+<div class="nav-item" onclick="go('standards')">
+<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+Tiêu chuẩn Kế toán
+</div>
+<div class="nav-group">Trợ lý AI</div>
+<div class="nav-item" onclick="go('ai-chat')" id="nav-ai">
+<svg viewBox="0 0 16 16" fill="none"><path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H9l-3 2v-2H3a1 1 0 01-1-1V3z" stroke="currentColor" stroke-width="1.3"/><path d="M5 6h6M5 8.5h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+Hỏi AI Nghiệp vụ
+<span style="margin-left:auto;font-size:9px;padding:1px 5px;border-radius:6px;background:var(--purple-bg);color:var(--purple);font-weight:700">AI</span>
+</div>
+</nav>
+</aside>
+<!-- CHÍNH -->
+<main class="main">
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="ph">
+    <div class="ph-title" id="dash-greeting">Xin chào! Dữ liệu chờ đối soát hôm nay:</div>
+    <div class="ph-sub" style="display:flex;align-items:center;gap:10px;margin-top:5px">
+      <span id="dash-shift-badge" class="ca-badge ca-sang">Ngày báo cáo: Hôm qua</span>
+      <span style="font-size:12px;color:var(--ink2)">Deadline hoàn thành: <strong>10:00 Sáng</strong></span>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-lbl">Hạng mục đối soát</div><div class="stat-val" id="stat-total">5</div></div>
+    <div class="stat"><div class="stat-lbl">Đã hoàn thành</div><div class="stat-val g" id="stat-done">0</div></div>
+    <div class="stat"><div class="stat-lbl">Đang xử lý</div><div class="stat-val" style="color:var(--blue)" id="stat-active">1</div></div>
+    <div class="stat"><div class="stat-lbl">Trễ hạn (KPI)</div><div class="stat-val r" id="stat-late">0</div></div>
+  </div>
+  <div class="prog-wrap">
+    <div class="prog-row"><div class="prog-label">Tiến độ công việc ngày</div><div class="prog-pct" id="prog-pct">0%</div></div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-hd">
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Danh sách công việc
+        </div>
+        <div id="dash-tasks"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 4.5H15l-4 3 1.5 4.5L8 11l-4.5 3L5 9.5l-4-3h5.5z" stroke="currentColor" stroke-width="1.2"/></svg>
+          Cảnh báo rủi ro (Hệ thống)
+        </div>
+        <div class="alert-row">
+          <div class="alert-item ai-warn">⚡ Quán A: Lệch tiền mặt 65.000đ (Vượt ngưỡng 50k) -> Yêu cầu biên bản đền bù.</div>
+          <div class="alert-item ai-info">🛒 Bếp tổng: 2 Phiếu điều chuyển nguyên liệu từ hôm qua chưa được bấm nhận.</div>
+          <div class="alert-item ai-warn">📉 Hao hụt Sườn tươi vượt định mức 3.2% -> Cần yêu cầu Bếp trưởng giải trình.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">Tổng quan dữ liệu (Tạm tính)</div>
+        <div class="handover-grid">
+          <div class="hv-field"><div class="hv-label">Doanh thu POS</div><div class="hv-val money" id="dash-rev">42,500,000đ</div></div>
+          <div class="hv-field"><div class="hv-label">Hóa đơn hủy (Void)</div><div class="hv-val warn" id="dash-orders">12 (Cần check)</div></div>
+          <div class="hv-field"><div class="hv-label">Chi phí phát sinh</div><div class="hv-val" id="dash-cash">1,250,000đ</div></div>
+          <div class="hv-field"><div class="hv-label">Lệch Tồn Kho</div><div class="hv-val danger" id="dash-issues">Sườn (-2kg)</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TASKS -->
+<div class="page" id="page-tasks">
+  <div class="ph">
+    <div class="ph-title">Nghiệp vụ đối soát</div>
+    <div class="ph-sub">Chi tiết các bước thực hiện đối soát Doanh thu, Chi phí, và Kho</div>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap" id="task-filter-row">
+    <button class="tl-f-btn active" onclick="filterTasks('all',this)">Tất cả</button>
+    <button class="tl-f-btn" onclick="filterTasks('wait',this)">Chờ xử lý</button>
+    <button class="tl-f-btn" onclick="filterTasks('active',this)">Đang làm</button>
+    <button class="tl-f-btn" onclick="filterTasks('done',this)">Đã xong</button>
+  </div>
+  <div class="task-pg">
+    <div class="tl-panel" id="task-list-panel"></div>
+    <div class="td-panel" id="task-detail-panel"><div style="text-align:center;padding:40px;color:var(--ink2)">← Chọn công việc bên trái</div></div>
+  </div>
+</div>
+
+<!-- SOP -->
+<div class="page" id="page-sop">
+  <div id="sop-list">
+    <div class="ph"><div class="ph-title">Quy định Kế toán nội bộ</div><div class="ph-sub">Căn cứ thực hiện công việc và xử lý sai phạm tại Cơm Tấm Làng</div></div>
+    <div class="sop-grid" id="sop-grid"></div>
+  </div>
+  <div id="sop-detail" style="display:none">
+    <div class="back-btn" onclick="sopBack()">← Quay lại danh sách</div>
+    <div id="sop-detail-body"></div>
+  </div>
+</div>
+
+<!-- FLOW -->
+<div class="page" id="page-flow">
+  <div class="ph"><div class="ph-title">Luồng làm việc Kế toán chi nhánh</div><div class="ph-sub">Theo dõi và phối hợp thông tin giữa Kế toán - Thu Ngân - Quản Lý - Kho</div></div>
+  <div class="flow-legend">
+    <div class="fl-item"><div class="fl-dot" style="background:var(--blue)"></div>Công việc thường nhật</div>
+    <div class="fl-item"><div class="fl-dot" style="background:var(--amber)"></div>Kiểm tra chéo (Cross-check)</div>
+    <div class="fl-item"><div class="fl-dot" style="background:var(--green)"></div>Báo cáo / Kết quả</div>
+  </div>
+  <div class="card">
+    <div class="flow-section-title">Ca sáng (08:00–11:30) - Đối soát Doanh thu & Kho</div>
+    <div class="flow-wrap">
+      <div class="f-node f-start" onclick="fd('gather')">① Thu thập dữ liệu</div><span class="f-arr">→</span>
+      <div class="f-node f-dec" onclick="fd('rev-check')">② Đối soát 3 lớp Doanh thu</div><span class="f-arr">→</span>
+      <div class="f-node" onclick="fd('void-check')">③ Check Hóa đơn Hủy/Giảm</div><span class="f-arr">→</span>
+      <div class="f-node f-dec" onclick="fd('inv-check')">④ Đối soát Nhập - Xuất (Kho)</div><span class="f-arr">→</span>
+      <div class="f-node f-end" onclick="fd('morning-rep')">⑤ Báo cáo sáng (Trước 10:00)</div>
+    </div>
+    <div class="branch-box">
+      <div class="branch-title">⚡ Kiểm tra chéo: Xử lý lệch tiền mặt (POS vs Thực nộp)</div>
+      <div class="branch-opts">
+        <div class="b-opt" onclick="fd('diff-min')"><span class="b-cond">Lệch < 50k</span><span class="b-arr">→</span><span class="b-act text-blue">Ghi sổ theo dõi tần suất Thu ngân</span></div>
+        <div class="b-opt" onclick="fd('diff-max')"><span class="b-cond">Lệch > 50k</span><span class="b-arr">→</span><span class="b-act text-red">Lập biên bản đền bù 100% (trừ lương)</span></div>
+      </div>
+    </div>
+    <div class="branch-box">
+      <div class="branch-title">⚡ Kiểm tra chéo: Hao hụt kho (Xuất vs Định mức Recipe)</div>
+      <div class="branch-opts">
+        <div class="b-opt" onclick="fd('inv-ok')"><span class="b-cond">Lệch < 1%</span><span class="b-arr">→</span><span class="b-act text-green">Ghi nhận chi phí định mức (Hao hụt tự nhiên)</span></div>
+        <div class="b-opt" onclick="fd('inv-warn')"><span class="b-cond">Lệch 1% - 3%</span><span class="b-arr">→</span><span class="b-act text-amber">Yêu cầu Trưởng ca rà soát lỗi nhập liệu</span></div>
+        <div class="b-opt" onclick="fd('inv-danger')"><span class="b-cond">Lệch > 3%</span><span class="b-arr">→</span><span class="b-act text-red">Yêu cầu kiểm kê đột xuất, trích xuất Camera</span></div>
+      </div>
+    </div>
+    <div class="flow-detail-box" id="flow-detail-box"><div class="fdb-title" id="fdb-title"></div><div class="fdb-body" id="fdb-body"></div></div>
+  </div>
+  <div class="card">
+    <div class="flow-section-title">Ca chiều (13:30–17:30) - Kiểm soát Chi phí & Hệ thống</div>
+    <div class="flow-wrap">
+      <div class="f-node f-start" onclick="fd2('exp-gather')">① Tập hợp Phiếu Chi</div><span class="f-arr">→</span>
+      <div class="f-node f-dec" onclick="fd2('exp-verify')">② Xác minh Hợp lệ</div><span class="f-arr">→</span>
+      <div class="f-node" onclick="fd2('exp-class')">③ Phân bổ (COGS/Vận hành)</div><span class="f-arr">→</span>
+      <div class="f-node" onclick="fd2('sys-clean')">④ Dọn dẹp phiếu treo (KiotViet)</div><span class="f-arr">→</span>
+      <div class="f-node f-end" onclick="fd2('evening-rep')">⑤ Cập nhật P&L / Quản trị</div>
+    </div>
+    <div class="branch-box">
+      <div class="branch-title">⚡ Điều kiện Chứng từ hợp lệ: Phiếu chi > 20.000đ</div>
+      <div class="branch-opts">
+        <div class="b-opt" onclick="fd2('exp-ok')"><span class="b-cond">Có Hóa đơn + Chữ ký duyệt</span><span class="b-arr">→</span><span class="b-act text-green">Ghi nhận vào chi phí</span></div>
+        <div class="b-opt" onclick="fd2('exp-fail')"><span class="b-cond">Thiếu chứng từ / Không ai duyệt</span><span class="b-arr">→</span><span class="b-act text-red">Từ chối ghi nhận, báo cáo Quản lý</span></div>
+      </div>
+    </div>
+    <div class="flow-detail-box" id="flow-detail-box2"><div class="fdb-title" id="fdb-title2"></div><div class="fdb-body" id="fdb-body2"></div></div>
+  </div>
+</div>
+
+<!-- BÁO CÁO ĐỐI SOÁT & LƯU GOOGLE SHEET -->
+<div class="page" id="page-handover">
+  <div class="ph">
+    <div class="ph-title">Báo Cáo Đối Soát Doanh Thu</div>
+    <div class="ph-sub">Nhập số liệu đối soát, ghi nhận lỗi/sự cố và đồng bộ thẳng lên Google Sheet.</div>
+  </div>
+  
+  <div class="hv-section">
+    <div class="hv-sec-title">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Thông tin chung
+    </div>
+    <div class="hv-row">
+      <div><label style="font-size:11px;font-weight:700;color:var(--ink1);display:block;margin-bottom:4px">Ngày đối soát (Hôm qua)</label><input type="date" class="hv-input" id="rec-date"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--ink1);display:block;margin-bottom:4px">Chi nhánh</label><select class="hv-input" id="rec-branch"><option>Cơm Tấm Làng - Q1</option><option>Cơm Tấm Làng - Q3</option></select></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--ink1);display:block;margin-bottom:4px">Kế toán phụ trách</label><input class="hv-input" id="rec-reporter" value="Kế toán chi nhánh"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--ink1);display:block;margin-bottom:4px">Trưởng ca nộp báo cáo</label><input class="hv-input" placeholder="Họ tên trưởng ca"></div>
+    </div>
+  </div>
+
+  <!-- KẾT QUẢ ĐỐI SOÁT & BẢNG EXCEL -->
+  <div id="recon-results">
+      <div class="hv-section">
+        <div class="hv-sec-title">💰 Đối soát 3 Lớp Doanh Thu</div>
+        
+        <!-- Tiền mặt -->
+        <div style="display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:var(--r8);background:var(--bg1);border:1px solid var(--bg3);margin-bottom:8px">
+          <div style="flex:1.5"><div style="font-size:11px;font-weight:bold;color:var(--ink0)">1. TIỀN MẶT</div></div>
+          <div style="flex:2"><div style="font-size:11px;color:var(--ink2)">Ghi nhận POS (VNĐ)</div><input class="hv-input" type="number" id="pos-cash" oninput="calcRecon()" placeholder="Nhập số từ phần mềm"></div>
+          <div style="flex:2"><div style="font-size:11px;color:var(--ink2)">Thực nhận báo cáo (VNĐ)</div><input class="hv-input" type="number" id="actual-cash" oninput="calcRecon()" placeholder="Nhập số tiền nộp"></div>
+          <div style="flex:1.5;text-align:right"><div style="font-size:11px;color:var(--ink2)">Chênh lệch</div><div style="font-size:15px;font-weight:700;margin-top:3px" id="diff-cash">—</div></div>
+        </div>
+        
+        <!-- Ngân hàng -->
+        <div style="display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:var(--r8);background:var(--bg1);border:1px solid var(--bg3);margin-bottom:8px">
+          <div style="flex:1.5"><div style="font-size:11px;font-weight:bold;color:var(--ink0)">2. NGÂN HÀNG (Bank/Momo)</div></div>
+          <div style="flex:2"><div style="font-size:11px;color:var(--ink2)">Ghi nhận POS (VNĐ)</div><input class="hv-input" type="number" id="pos-bank" oninput="calcRecon()" placeholder="Nhập số từ phần mềm"></div>
+          <div style="flex:2"><div style="font-size:11px;color:var(--ink2)">Khớp Sao kê Bank (VNĐ)</div><input class="hv-input" type="number" id="actual-bank" oninput="calcRecon()" placeholder="Nhập số từ sao kê"></div>
+          <div style="flex:1.5;text-align:right"><div style="font-size:11px;color:var(--ink2)">Chênh lệch</div><div style="font-size:15px;font-weight:700;margin-top:3px" id="diff-bank">—</div></div>
+        </div>
+        
+        <!-- App -->
+        <div style="display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:var(--r8);background:var(--bg1);border:1px solid var(--bg3)">
+          <div style="flex:1.5"><div style="font-size:11px;font-weight:bold;color:var(--ink0)">3. APP (Grab/Shopee)</div></div>
+          <div style="flex:2"><div style="font-size:11px;color:var(--ink2)">Ghi nhận POS (VNĐ)</div><input class="hv-input" type="number" id="pos-app" oninput="calcRecon()" placeholder="Nhập số từ phần mềm"></div>
+          <div style="flex:2"><div style="font-size:11px;color:var(--ink2)">Khớp Merchant App (VNĐ)</div><input class="hv-input" type="number" id="actual-app" oninput="calcRecon()" placeholder="Nhập số từ Merchant"></div>
+          <div style="flex:1.5;text-align:right"><div style="font-size:11px;color:var(--ink2)">Chênh lệch</div><div style="font-size:15px;font-weight:700;margin-top:3px" id="diff-app">—</div></div>
+        </div>
+      </div>
+
+      <!-- EXCEL PREVIEW TABLE (NƠI NHẬP GHI CHÚ ĐỐI SOÁT) -->
+      <div class="hv-section">
+        <div class="hv-sec-title">
+            📊 Bảng Ghi nhận Lỗi Đối soát (Sẽ lưu lên Google Sheet)
+        </div>
+        <div class="excel-table-wrap">
+            <table class="excel-table" id="excel-table">
+                <thead>
+                    <tr>
+                        <th>Hạng Mục Đối Soát</th>
+                        <th class="td-money">POS (VNĐ)</th>
+                        <th class="td-money">Thực Tế (VNĐ)</th>
+                        <th class="td-money">Chênh Lệch</th>
+                        <th style="width:30%">Nhập Ghi Chú / Nguyên Nhân Lệch</th>
+                    </tr>
+                </thead>
+                <tbody id="excel-tbody">
+                    <!-- Data will be populated here via JS -->
+                </tbody>
+            </table>
+        </div>
+      </div>
+
+      <!-- GHI NHẬN LỖI/SỰ CỐ KHÁC (KHO, CHỨNG TỪ...) -->
+      <div class="hv-section" style="border-color: var(--amber-bd); background: var(--amber-bg);">
+        <div class="hv-sec-title" style="color: var(--amber)">⚠️ Ghi nhận Lỗi / Sự cố khác trong ca (Kho, Hóa đơn...)</div>
+        <div class="hv-row">
+            <div>
+                <label style="font-size:11px;font-weight:700;color:var(--ink1);display:block;margin-bottom:4px">Phân loại lỗi</label>
+                <select class="hv-input" id="error-type" style="background:var(--bg0)">
+                    <option value="">-- Không có lỗi khác --</option>
+                    <option value="Lỗi Thu Ngân">Thu ngân thao tác sai (Nhầm TM/CK, quên bill)</option>
+                    <option value="Lệch Tiền">Lệch tiền mặt > 50k (Chưa rõ nguyên nhân)</option>
+                    <option value="Hao hụt Kho">Hao hụt kho vượt định mức (> 3%)</option>
+                    <option value="Hóa đơn Hủy">Bill hủy/giảm giá sai quy định</option>
+                    <option value="Lỗi Hệ thống">Lỗi hệ thống/KiotViet/Mất mạng</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size:11px;font-weight:700;color:var(--ink1);display:block;margin-bottom:4px">Mô tả chi tiết & Hướng xử lý</label>
+                <textarea id="error-note" class="rep-textarea" style="background:var(--bg0); min-height: 40px;" placeholder="Ví dụ: Thiếu 100k tiền mặt, đã lập biên bản trừ lương..."></textarea>
+            </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-green" id="btn-save-sheet" onclick="saveToGoogleSheet()">☁️ Đồng bộ Google Sheet</button>
+        <button class="btn btn-blue" onclick="exportToExcel()">📥 Tải File CSV</button>
+      </div>
+      <div style="font-size:11px; color:var(--ink2); margin-top:8px;">
+          * Mọi ghi chú đối soát và Lỗi/Sự cố bạn nhập ở trên sẽ được đẩy lên Google Sheet thành các dòng báo cáo riêng biệt.
+      </div>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div class="page" id="page-report">
+  <div class="ph">
+    <div class="ph-title">Chỉnh sửa & Gửi Báo Cáo Kế Toán</div>
+    <div class="ph-sub">Bạn có thể gõ trực tiếp vào báo cáo để chỉnh sửa trước khi copy gửi đi.</div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-hd">Nội dung báo cáo nhanh</div>
+      <div class="rep-field"><label class="rep-label">Loại báo cáo</label>
+        <select class="rep-select">
+            <option>BÁO CÁO TỔNG HỢP NGÀY (Hạn chót 10:30 AM)</option>
+            <option>CẢNH BÁO NHANH SỰ CỐ</option>
+            <option>Báo cáo Hao hụt kho định kỳ</option>
+        </select>
+      </div>
+      <div class="rep-field"><label class="rep-label">Trạng thái dữ liệu</label>
+        <select class="rep-select" id="rep-status" onchange="toggleIssue()">
+            <option>Đã khớp 100% dữ liệu</option>
+            <option>Có sai lệch tiền mặt/kho (Đã yêu cầu đền bù)</option>
+            <option>Lỗi hệ thống diện rộng / Lệch lớn chưa rõ nguyên nhân</option>
+        </select>
+      </div>
+      <div class="rep-field" id="rep-issue-field" style="display:none">
+          <label class="rep-label">Mô tả sự cố (Theo Form: Tình huống - Nguyên nhân - Đề xuất xử lý)</label>
+          <textarea class="rep-textarea" placeholder="VD: Quán A lệch 100k tiền mặt. Nguyên nhân: Thu ngân thối nhầm. Xử lý: Lập biên bản trừ lương."></textarea>
+      </div>
+      <div class="rep-field"><label class="rep-label">Chỉ số tóm tắt (Cho phép chỉnh sửa tự do)</label>
+          <textarea class="rep-textarea" style="height: 140px;" id="report-summary">BÁO CÁO TỔNG HỢP NGÀY:
+- Tổng doanh thu hệ thống: [Chưa tính toán]
+- Tiền mặt: Khớp
+- Bank/App: Khớp sao kê
+- Lệch kho: Sườn (-2kg) - Lỗi vận hành.
+- Chi phí phát sinh: 1,250,000đ (Đã đủ hóa đơn)
+- Phiếu treo: 0</textarea>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-green" onclick="copyReport()">📋 Copy Báo Cáo (Zalo/Viber)</button>
+      </div>
+    </div>
+    <div>
+      <div class="card" id="admin-stats">
+        <div class="card-hd">Thống kê KPI Kế Toán</div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--ink2)">Chính xác đối soát Doanh thu</span><strong style="color:var(--green)">0 Lỗi</strong></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--ink2)">Báo cáo đúng hạn (Trước 10h)</span><strong>Đạt</strong></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--ink2)">Kiểm soát định biên chi phí</span><strong style="color:var(--amber)">Cảnh báo 1 lần</strong></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--ink2)">Xử lý chứng từ thanh toán</span><strong style="color:var(--green)">100% hợp lệ</strong></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">Lịch sử Cảnh báo đã gửi</div>
+        <div class="rep-history" id="rep-history">
+          <div class="rh-item"><div class="rh-top"><span class="rh-name">Báo cáo Ngày (Hôm qua)</span><span class="tr-tag tag-done">Đã gửi</span></div><div class="rh-meta">10:15 AM · Zalo Nhóm</div></div>
+          <div class="rh-item"><div class="rh-top"><span class="rh-name">Cảnh báo hao hụt Thịt Sườn</span><span class="tr-tag tag-wait">Chờ sếp duyệt</span></div><div class="rh-meta">Hôm qua 16:00 · Lệch >3%</div><div class="rh-note">⚠ Yêu cầu check camera kho</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCHEDULE -->
+<div class="page" id="page-schedule">
+  <div class="ph"><div class="ph-title">Lịch trình hoạt động Kế toán</div><div class="ph-sub">Đảm bảo KPI không vi phạm thời hạn báo cáo</div></div>
+  <div class="card">
+    <div class="card-hd"><span class="ca-badge ca-sang">KHUNG GIỜ SÁNG (08:00 – 11:30)</span> Ưu tiên đối soát</div>
+    <div class="sch-row"><span class="sch-dot sd-daily"></span><span class="sch-time">08:00</span><span class="sch-name">Thu thập dữ liệu KiotViet, Bank, Zalo báo cáo</span><span class="sch-tag tag-done" style="background:var(--red-bg);color:var(--red)">Bắt buộc</span></div>
+    <div class="sch-row"><span class="sch-dot sd-shift"></span><span class="sch-time">09:15</span><span class="sch-name">Rà soát hóa đơn hủy/giảm giá >10%</span><span class="sch-tag tag-active">Kiểm soát</span></div>
+    <div class="sch-row"><span class="sch-dot sd-shift"></span><span class="sch-time">09:45</span><span class="sch-name">Đối soát Nhập - Xuất - Tồn (KiotViet vs Phiếu giao)</span><span class="sch-tag tag-active">Thường ngày</span></div>
+    <div class="sch-row"><span class="sch-dot sd-end"></span><span class="sch-time">10:00</span><span class="sch-name"><strong>DEADLINE: Báo cáo Doanh Thu Ngày lên Zalo</strong></span><span class="sch-tag tag-done" style="background:var(--red-bg);color:var(--red)">KPI Cứng</span></div>
+    <div class="sch-row"><span class="sch-dot sd-daily"></span><span class="sch-time">10:30</span><span class="sch-name">Kiểm tra tồn đọng kho: Phiếu chưa nhận, sai định mức</span><span class="sch-tag tag-active">Kiểm soát</span></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="ca-badge ca-toi">KHUNG GIỜ CHIỀU (13:30 – 17:30)</span> Xử lý chi phí & Quản trị</div>
+    <div class="sch-row"><span class="sch-dot sd-shift"></span><span class="sch-time">13:30</span><span class="sch-name">Tập hợp phiếu chi quán & phân bổ (COGS/Vận hành)</span><span class="sch-tag tag-done" style="background:var(--red-bg);color:var(--red)">Bắt buộc</span></div>
+    <div class="sch-row"><span class="sch-dot sd-daily"></span><span class="sch-time">15:00</span><span class="sch-name">Kiểm soát Định mức (Recipe) & Xử lý phiếu Xuất hủy</span><span class="sch-tag tag-active">Thường ngày</span></div>
+    <div class="sch-row"><span class="sch-dot sd-daily"></span><span class="sch-time">16:30</span><span class="sch-name">Cập nhật dữ liệu P&L tuần/tháng</span><span class="sch-tag tag-active">Quản trị</span></div>
+    <div class="sch-row"><span class="sch-dot sd-end"></span><span class="sch-time">17:30</span><span class="sch-name"><strong>Dọn dẹp KiotViet: Đảm bảo 0 phiếu "Đang chuyển" tồn đọng</strong></span><span class="sch-tag tag-done" style="background:var(--red-bg);color:var(--red)">KPI Cứng</span></div>
+  </div>
+</div>
+
+<!-- DOCS -->
+<div class="page" id="page-docs">
+  <div class="ph"><div class="ph-title">Tài liệu Kế toán & Biểu mẫu</div><div class="ph-sub">Các file gốc dùng cho công tác đối soát và tính lương/KPI</div></div>
+  <div class="doc-row"><div class="doc-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="var(--blue)" stroke-width="1.3"/><path d="M5 6h6M5 9h4" stroke="var(--blue)" stroke-width="1.3" stroke-linecap="round"/></svg></div><div><div class="doc-name">MTCV Kế toán12.xlsx (Bản Master)</div><div class="doc-sub">Quy trình, định mức, KPI - Cập nhật 21/04/2026</div></div></div>
+  <div class="doc-row"><div class="doc-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="var(--blue)" stroke-width="1.3"/><path d="M5 6h6M5 9h4" stroke="var(--blue)" stroke-width="1.3" stroke-linecap="round"/></svg></div><div><div class="doc-name">Mẫu Báo Cáo P&L (Tháng)</div><div class="doc-sub">Dùng tổng hợp Doanh thu - COGS - OPEX</div></div></div>
+  <div class="doc-row"><div class="doc-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="var(--blue)" stroke-width="1.3"/><path d="M5 6h6M5 9h4" stroke="var(--blue)" stroke-width="1.3" stroke-linecap="round"/></svg></div><div><div class="doc-name">Bảng định mức tiêu hao NVL (Recipe)</div><div class="doc-sub">Căn cứ để đối soát hao hụt kho hàng ngày</div></div></div>
+  <div class="doc-row"><div class="doc-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="var(--blue)" stroke-width="1.3"/><path d="M5 6h6M5 9h4" stroke="var(--blue)" stroke-width="1.3" stroke-linecap="round"/></svg></div><div><div class="doc-name">Biên bản xử lý sai phạm / đền bù</div><div class="doc-sub">In ra gửi cho Quán khi có lệch tiền > 50k</div></div></div>
+</div>
+
+<!-- STANDARDS -->
+<div class="page" id="page-standards">
+  <div class="ph"><div class="ph-title">Tiêu chuẩn và Đạo đức Kế toán</div><div class="ph-sub">Quy định bắt buộc đối với nhân sự phòng Kế toán chuỗi Cơm Tấm Làng</div></div>
+  <div class="card">
+    <div class="card-hd">Quy định chung về Tác phong & Đạo đức</div>
+    <div class="std-list">
+      <div class="std-item"><span class="std-k">Tính Trung thực</span><span class="std-v">Tuyệt đối không bao che hành vi gian lận. Mọi phát hiện sai lệch phải báo cáo trung thực cho CEO.</span></div>
+      <div class="std-item"><span class="std-k">Tính Bảo mật</span><span class="std-v">Không cung cấp dữ liệu doanh thu, định mức chế biến (Recipe), giá NCC cho bên thứ ba.</span></div>
+      <div class="std-item"><span class="std-k">Tính Độc lập</span><span class="std-v">Kế toán là kiểm soát viên. Không trực tiếp giữ tiền mặt, không giữ mật khẩu chuyển tiền của chủ.</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Quy định về Xử lý Sai lệch & Chế tài (Áp dụng cho Quán)</div>
+    <div class="std-list">
+      <div class="std-item"><span class="std-k">Sai lệch Tiền mặt</span><span class="std-v">Lệch < 50.000đ: Ghi sổ theo dõi. Lệch > 50.000đ: Lập biên bản, yêu cầu thu ngân đền bù 100%.</span></div>
+      <div class="std-item"><span class="std-k">Lệch kho (Hao hụt)</span><span class="std-v">< 1%: Chấp nhận hao hụt tự nhiên. Từ 1-3%: Yêu cầu Bếp giải trình. > 3%: Kiểm kê đột xuất, check cam.</span></div>
+      <div class="std-item"><span class="std-k">Chứng từ chi phí</span><span class="std-v">Chi phí > 20.000đ BẮT BUỘC có hóa đơn/phiếu ký. Thiếu -> Kế toán từ chối ghi nhận vào P&L.</span></div>
+      <div class="std-item"><span class="std-k">Phiếu nhập kho</span><span class="std-v">Sai lệch trọng lượng lúc cân nhập hàng cho phép tối đa là 0.1kg. Quá mức từ chối nhận.</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd">KPI & Cở sở đo lường (Dành cho Kế toán)</div>
+    <div class="std-list">
+      <div class="std-item"><span class="std-k">Chính xác số liệu</span><span class="std-v">Tính 1 lỗi KPI nếu lệch số liệu đối soát App/POS/Tiền mặt mà không có giải trình ngay trong ngày.</span></div>
+      <div class="std-item"><span class="std-k">Báo cáo đúng hạn</span><span class="std-v">Báo cáo ngày gửi sau 10:00 AM bị tính 1 lỗi. Sai sót tính toán trên báo cáo tính 1 lỗi.</span></div>
+      <div class="std-item"><span class="std-k">Cảnh báo chi phí</span><span class="std-v">Chi phí vượt định biên mà kế toán không phát hiện/cảnh báo cho CEO bị tính 1 lỗi.</span></div>
+      <div class="std-item"><span class="std-k">Hệ thống gọn gàng</span><span class="std-v">Tuyệt đối không để phiếu "Đang chuyển" tồn tại quá 24h. Kế toán phải đôn đốc chi nhánh bấm nhận.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- AI CHAT PAGE -->
+<div class="page" id="page-ai-chat">
+  <div class="ph">
+    <div class="ph-title" style="display:flex;align-items:center;gap:10px">
+      Trợ lý AI Nghiệp vụ Kế toán
+      <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:var(--purple-bg);color:var(--purple);font-weight:700;letter-spacing:.04em">GEMINI AI</span>
+    </div>
+    <div class="ph-sub">Hỗ trợ tra cứu quy định nội bộ, công thức đối soát, và hướng dẫn giải quyết tình huống chênh lệch số liệu.</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start">
+    <!-- CHAT AREA -->
+    <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;height:72vh">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--bg3);display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--green)" id="ai-status-dot"></div>
+        <span style="font-size:12px;font-weight:600;color:var(--ink1)" id="ai-status-text">AI sẵn sàng</span>
+        <button onclick="clearChat()" style="margin-left:auto;font-size:11px;padding:3px 8px;border-radius:var(--r4);border:1px solid var(--bg3);background:var(--bg1);color:var(--ink2);cursor:pointer">Xoá lịch sử</button>
+      </div>
+      <div id="chat-msgs" style="flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+        <div class="ai-msg ai-msg-bot">
+          <div class="ai-avatar">AI</div>
+          <div class="ai-bubble">Xin chào Kế toán! Tôi đã được nạp toàn bộ quy trình, giới hạn sai số, và MTCV của hệ thống Cơm Tấm Làng.<br><br>Bạn cần tra cứu điều gì:<br>• Cách xử lý lệch quỹ tiền mặt?<br>• Biên độ cho phép hao hụt kho sườn, gạo?<br>• Hướng xử lý khi Quán quên bấm nhận hàng?<br><br>Hãy đặt câu hỏi nhé!</div>
+        </div>
+      </div>
+      <div style="padding:10px 14px;border-top:1px solid var(--bg3)">
+        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap" id="quick-btns">
+          <button class="ai-quick" onclick="quickAsk('Thu ngân nộp thiếu 100k tiền mặt, xử lý sao?')">Lệch tiền mặt > 50k</button>
+          <button class="ai-quick" onclick="quickAsk('Kho Bếp báo hao hụt sườn 2.5%, tôi ghi nhận thế nào?')">Hao hụt kho 1-3%</button>
+          <button class="ai-quick" onclick="quickAsk('Quán báo App hiển thị giao thành công nhưng POS không có tiền?')">Lệch App vs POS</button>
+          <button class="ai-quick" onclick="quickAsk('Công thức đối soát tiền mặt cuối ngày là gì?')">Công thức đối soát</button>
+        </div>
+        <div style="display:flex;gap:6px">
+          <input id="chat-input" style="flex:1;padding:9px 12px;border:1px solid var(--bg3);border-radius:var(--r8);font-size:13px;background:var(--bg1);color:var(--ink0);outline:none" placeholder="Nhập câu hỏi... (Enter để gửi)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}">
+          <button onclick="sendChat()" id="send-btn" style="padding:9px 16px;border-radius:var(--r8);background:var(--purple-bg);border:1px solid var(--purple-bd);color:var(--purple);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Gửi →</button>
+        </div>
+      </div>
+    </div>
+    <!-- SIDEBAR: ANALYSIS + SUGGESTIONS -->
+    <div>
+      <div class="card" id="ai-analysis-card">
+        <div class="card-hd" style="color:var(--purple)">
+          <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M2 12l4-4 3 3 5-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Phân tích hành động Kế toán
+        </div>
+        <div id="ai-analysis-content" style="font-size:12px;color:var(--ink2);line-height:1.7">
+          AI sẽ đánh giá độ chính xác khi bạn hoàn thành các bước đối soát hoặc nhập liệu số lệch.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">Từ khóa tìm kiếm nhanh</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="ai-topic" onclick="quickAsk('Hóa đơn hủy (Void) > 3% tổng bill thì xử lý thế nào?')">Quy định Hóa đơn hủy</div>
+          <div class="ai-topic" onclick="quickAsk('Khách chuyển khoản giả mạo, thu ngân đã xuất bill, Kế toán tính sao?')">Xử lý bill ảo/CK giả</div>
+          <div class="ai-topic" onclick="quickAsk('Lịch làm việc chi tiết ca sáng của Kế toán chuỗi?')">Deadline Ca Sáng</div>
+          <div class="ai-topic" onclick="quickAsk('Phiếu điều chuyển nguyên liệu bị treo quá 24h, ai chịu trách nhiệm?')">Quy định Phiếu điều chuyển treo</div>
+          <div class="ai-topic" onclick="quickAsk('Liệt kê 4 loại chi phí kế toán cần phân bổ vào hệ thống?')">Phân loại chi phí P&L</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+</div>
+
+<!-- BẢNG ĐIỀU KHIỂN SOS -->
+<div class="emer-panel" id="emer-panel">
+<div class="emer-box">
+<div class="emer-head">
+<div class="emer-head-title">Báo Cáo Sự Cố Khẩn</div>
+<div class="emer-head-sub">Dành cho Kế toán báo cáo gian lận / Lỗi hệ thống nghiêm trọng</div>
+</div>
+<div class="emer-body">
+<div class="emer-contact">
+<div class="ec-item"><div class="ec-dot urgent"></div><div class="ec-name">CEO / Chủ quán</div><div class="ec-phone">0900.xxx.xxx</div></div>
+<div class="ec-item"><div class="ec-dot urgent"></div><div class="ec-name">Quản lý khu vực</div><div class="ec-phone">0912.345.678</div></div>
+<div class="ec-item"><div class="ec-dot normal"></div><div class="ec-name">IT (KiotViet/Hệ thống)</div><div class="ec-phone">1900.xxxx</div></div>
+</div>
+<div style="padding:10px;background:var(--amber-bg);color:var(--amber);border-radius:var(--r8);font-size:12px;margin-bottom:14px"> 
+⚡ Chỉ báo trực tiếp CEO khi phát hiện nghi vấn gian lận quỹ lớn, thất thoát kho > 5% hoặc lộ lọt dữ liệu (Recipe).
+</div> 
+<button class="emer-close" onclick="closeEmer()">Đóng</button> 
+</div> 
+</div> 
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Hàm toast thông báo ───────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  if (t) {
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+}
+
+// ── URL GOOGLE APPS SCRIPT (WEBHOOK) ──────────────────────────────────
+const GOOGLE_SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyrfZsxNQk7xfy2U8Dn3_BN3wbbo0VIdkqzyfLHRVQgxi025LXnQj_GT3T5peDYN0LOTg/exec"; 
+
+// ── DỮ LIỆU KẾ TOÁN ────────────────────────────────────────────────────────
+const TASKS = [
+{ 
+  id:0, name:"Đối soát Doanh thu Ngày", time:"08:00", ca:"Sáng", status:"active",
+  desc:"Đảm bảo toàn bộ doanh thu từ mọi nguồn (Tiền mặt, Chuyển khoản, App) được ghi nhận chính xác vào sổ sách và đổ về tài khoản đầy đủ.",
+  flow:[["Tải dữ liệu","Truy cập KiotViet từ xa và Group Zalo lấy báo cáo chốt ca của Quán."],["Đối soát Tiền mặt","Tổng trên POS = Bảng kê tiền mặt thực nộp - Tiền lẻ đầu ca."],["Đối soát Bank","Doanh thu Bank trên POS = Sao kê ngân hàng."],["Đối soát App","Doanh thu App trên POS = Lịch sử thanh toán Merchant App (Grab/Shopee)."],["Xử lý lệch","Lệch <50k theo dõi, >50k lập biên bản đền bù."]],
+  checks:["Đã tải File Excel KiotViet ngày hôm qua","Khớp số liệu Tiền mặt thực nộp","Khớp biến động số dư Bank","Khớp đối soát App Merchant","Kiểm tra list hóa đơn Hủy (Void) < 3%"],
+  standards:[["Deadline hoàn thành","Trước 10:00 sáng"],["Chênh lệch TM cho phép","< 50.000đ (Trên 50k đền 100%)"],["Hóa đơn hủy","Phải có lý do, >3% yêu cầu giải trình"]],
+  scenarios:[["Sai phương thức thanh toán (Khách trả Bank nhưng nhập Tiền mặt)?","Kế toán điều chỉnh lại trên file theo dõi: Điều chuyển từ TM sang CK để khớp số. Cảnh báo lỗi thao tác cho Trưởng ca."],["Nghi ngờ dùng bill CK giả?","Tuyệt đối không ghi nhận doanh thu nếu tiền chưa nổi trong sao kê. Yêu cầu quán rà soát."],["App báo giao thành công, tiền không về ví?","Kiểm tra Lịch sử Merchant. Liên hệ tổng đài App đối soát mã đơn. Check xem có lệnh phạt cấn trừ nợ từ App không."]]
+},
+{ 
+  id:1, name:"Đối soát Xuất - Nhập - Tồn (Kho)", time:"09:45", ca:"Sáng", status:"wait",
+  desc:"Kiểm soát hao hụt Nguyên Vật Liệu (NVL), đảm bảo nhân viên nhập liệu đúng thực tế và không xảy ra tình trạng thất thoát.",
+  flow:[["Check Nhập kho","So sánh phiếu giao hàng (NCC) vs số lượng nhân viên thực nhập KiotViet."],["Check Xuất kho","Kiểm tra lượng NVL xuất trên hệ thống có khớp với lượng NVL cần dùng (Recipe) để ra số món bán không."],["Check Phiếu treo","Tuyệt đối không để phiếu 'Đang chuyển' tồn tại quá 24h."],["Xử lý chênh lệch","Ghi nhận lỗi quy trình hoặc cảnh báo gian lận nếu hao hụt cao."]],
+  checks:["Phiếu nhập kho khớp chứng từ giấy (Sai số < 0.1kg)","Hao hụt NVL nằm trong mức cho phép (< 1%)","Không có phiếu 'Đang chuyển' quá 24h","Các phiếu xuất hủy có đính kèm ảnh bằng chứng"],
+  standards:[["Hao hụt < 1%","Chấp nhận, ghi nhận vào chi phí định mức."],["Hao hụt 1% - 3%","Cảnh báo Trưởng ca rà soát thao tác cân đong."],["Hao hụt > 3%","Nghi ngờ thất thoát. Yêu cầu kiểm kê đột xuất & check Cam."]],
+  scenarios:[["Lệch tồn kho sườn ở Bếp Trung Tâm?","Do không tính trừ lượng mỡ/xương thải loại khi pha lóc. Yêu cầu BTT lập phiếu 'Xuất hủy/Hao hụt sơ chế' để cân bằng."],["Có báo cáo nhận hàng Zalo nhưng chưa tạo phiếu nhập App?","Nhắc nhở trưởng ca trên group. Yêu cầu tạo phiếu ngay -> Ghi nhận lỗi KPI Trưởng ca."]]
+},
+{ 
+  id:2, name:"Kiểm soát & Phân bổ Chi Phí", time:"13:30", ca:"Chiều", status:"wait",
+  desc:"Kiểm soát tính hợp lý, hợp pháp của các khoản chi tại quán; phân loại chi phí chính xác để tính P&L (Lãi/Lỗ).",
+  flow:[["Thu thập chứng từ","Lấy ảnh Phiếu chi, hóa đơn bán lẻ trên Zalo báo cáo."],["Xác minh hợp lệ","Có chữ ký người lập/duyệt? Số tiền khớp hóa đơn thực tế?"],["Phân bổ chi phí","Nhập vào 4 nhóm: Giá vốn (COGS), Nhân sự, Vận hành, Khác."],["Khớp quỹ","Kiểm tra quỹ tiền mặt tại quán có bị âm/sai do chi tiền mặt không."]],
+  checks:["Mọi khoản chi > 20.000đ đều có hóa đơn/chữ ký","Chi phí phát sinh nằm trong hạn mức Trưởng ca được duyệt (< 500k)","Các khoản chi lớn có phê duyệt của CEO","Phân loại đúng: Mua đá -> Giá vốn; Tiền điện -> Vận hành"],
+  standards:[["Yêu cầu chứng từ","Bắt buộc với chi > 20.000đ. Không có -> Kế toán từ chối chi."],["Hạn mức Trưởng ca","Chỉ được tự quyết chi < 500.000đ."],["Cảnh báo","Báo ngay nếu mua đá tăng đột biến so với doanh thu."]],
+  scenarios:[["Nhân viên tự ý lấy tiền quỹ đi siêu thị không có phiếu chi kế toán duyệt?","Từ chối ghi nhận. Báo cáo Quản lý xử lý vi phạm nội quy. Quỹ thiếu -> nhân viên phải bù."],["Mua hàng NCC nhưng đơn giá tự nhiên tăng cao?","Cảnh báo ngay cho chủ quán về việc thay đổi đơn giá bất thường so với hợp đồng cũ."]]
+},
+{ 
+  id:3, name:"Cập nhật Dữ liệu Quản trị & Báo cáo", time:"16:30", ca:"Chiều", status:"wait",
+  desc:"Cập nhật số liệu để làm nền tảng cho báo cáo P&L tuần/tháng, dọn dẹp hệ thống sạch sẽ trước khi kết thúc ngày.",
+  flow:[["Cập nhật File P&L","Nhập liệu Doanh thu thực tế, Giá vốn, Chi phí OPEX vào Báo cáo Quản trị."],["Tính Food Cost","So sánh Food Cost thực tế với Định mức."],["Dọn dẹp hệ thống","Rà soát & chốt các phiếu điều chuyển nội bộ."],["Báo cáo kết ca","Nhắn tin xác nhận đã hoàn tất đối soát số liệu trong ngày."]],
+  checks:["Báo cáo tổng hợp Ngày đã được gửi trước 10:00 sáng","Food Cost cập nhật đầy đủ","Đã yêu cầu chi nhánh bấm 'Đã nhận' cho toàn bộ phiếu kho","Các lỗi vi phạm của Thu ngân/Kho đã được note vào file KPI"],
+  standards:[["KPI Cá nhân kế toán","0 phiếu xuất treo quá 24h trên hệ thống."],["Gửi báo cáo","Chính xác số liệu, không sai lỗi cộng trừ cơ bản."],["Food Cost (Mục tiêu)","< 35% trên Doanh thu thuần."]],
+  scenarios:[["Khách hàng phàn nàn muốn hoàn tiền đơn > 200k?","Thu ngân không được tự quyết. Phải báo quản lý duyệt, sau đó thông báo Kế toán để ghi nhận xuất hủy và hoàn tiền."]]
+}
+];
+
+const SOPS = [
+{ cat:"Doanh Thu", name:"Quy định Xử lý Sai lệch Tiền Mặt", meta:"Áp dụng cho Thu Ngân",
+  steps:[["Lệch < 50.000đ","Kế toán ghi sổ theo dõi nội bộ. Nếu lặp lại nhiều lần báo cáo Quản lý."],["Lệch > 50.000đ","Kế toán lập biên bản. Thu ngân đền bù 100% số tiền thiếu. Trừ thẳng vào lương cuối tháng."],["Sai phương thức TT","Kế toán tự điều chỉnh trên file nội bộ (TM -> Bank). Đánh dấu lỗi KPI thao tác của thu ngân."]],
+  note:"Kế toán tuyệt đối không tự ý lấy tiền quỹ này bù quỹ kia để làm đẹp số liệu báo cáo." },
+{ cat:"Kho & Hàng", name:"Quy định Hao hụt & Điều chuyển", meta:"Kiểm soát nguyên vật liệu",
+  steps:[["Sai lệch khi nhận hàng","Hàng từ NCC giao đến BTT phải cân lại. Sai lệch cho phép tối đa 0.1kg."],["Hao hụt sản xuất","< 1%: Chấp nhận hao hụt tự nhiên. > 3%: Cảnh báo khẩn, yêu cầu Bếp trưởng kiểm tra."],["Phiếu điều chuyển","Kế toán đôn đốc Quán bấm 'Đã nhận'. Nghiêm cấm để phiếu trạng thái 'Đang chuyển' qua ngày."],["Hạn sử dụng (FIFO)","Kiểm soát việc xuất sườn/thịt theo nguyên tắc Nhập trước - Xuất trước."]],
+  note: "Mọi hàng hỏng, hàng xuất hủy phải có ảnh chụp làm bằng chứng đính kèm trên phần mềm." },
+{ cat:"Chi Phí", name:"Quy định Phê duyệt & Chứng từ", meta:"Nguyên tắc xuất tiền",
+  steps:[["Điều kiện hóa đơn","Mọi khoản chi >= 20.000đ BẮT BUỘC có hóa đơn bán lẻ hoặc phiếu chi có chữ ký người bán/nhận."],["Hạn mức chi tại Quán","Trưởng ca chỉ tự quyết chi < 500k (VD: mua đá, sửa lặt vặt). Lớn hơn phải gọi xin phép Chủ quán."],["Tạm ứng lương","Phải có xác nhận phê duyệt từ Quản lý, Kế toán mới được chi hoặc ghi nhận trừ quỹ."]],
+  note: "Kế toán từ chối ghi nhận chi phí hợp lệ đối với các khoản chi không hóa đơn, nhân viên tự bỏ tiền túi chịu." },
+{ cat:"Nhân sự", name:"Đo lường KPI Kế Toán", meta:"Đánh giá hiệu suất cá nhân",
+  steps:[["Chính xác số liệu","Lệch đối soát không giải trình: > 5 lỗi (Kém), 0 lỗi (Rất tốt)."],["Báo cáo đúng hạn","Trễ deadline gửi Báo cáo Ngày (10:00AM) / Báo cáo Tháng (mùng 10): Tính 1 lỗi."],["Cảnh báo chi phí","Chi phí vượt định biên mà kế toán không lên tiếng: Tính 1 lỗi."],["Kiểm kê thực tế","Làm sai biên bản kiểm kê, thiếu chữ ký: Tính 1 lỗi."]],
+  note: "KPI ảnh hưởng trực tiếp đến mức thưởng tháng (Hệ số từ 0.0 đến 1.2)." }
+];
+
+const FLOW_DATA = {
+  "gather":{ title:"① Thu thập dữ liệu (08:00)", body:"- Truy cập Web KiotViet/Analy tải Excel.\n- Tải sao kê tài khoản ngân hàng Chủ quán.\n- Tải lịch sử giao dịch Merchant App (Grab/Shopee).\n- Gom ảnh báo cáo từ Zalo nhóm." },
+  "rev-check":{ title:"② Đối soát 3 lớp Doanh thu", body:"Lớp 1: Hệ thống POS vs Tiền mặt thực tế thu ngân báo.\nLớp 2: Hệ thống POS vs Sao kê Bank/Momo.\nLớp 3: Hệ thống POS vs Merchant App." },
+  "void-check":{ title:"③ Check Hóa đơn Hủy/Giảm", body:"- Rà soát các bill bị hủy, món được tặng.\n- Kiểm tra lý do (có hợp lý không).\n- Nếu số bill hủy > 3% tổng bill -> Yêu cầu giải trình." },
+  "inv-check":{ title:"④ Đối soát Kho (Nhập/Xuất)", body:"- Nhập: Phiếu KiotViet khớp Biên lai giao hàng NCC.\n- Xuất: Lượng xuất kho khớp với Định mức (Recipe) các món bán ra.\n- Tìm ra số hao hụt %." },
+  "morning-rep":{ title:"⑤ Gửi Báo cáo sáng (10:00)", body:"- Điền mẫu Báo cáo Tổng hợp Ngày.\n- Gửi lên Group Zalo Chủ quán/Quản lý.\n- Hạn chót KHÔNG được vượt qua 10h00 sáng." },
+  
+  "diff-min":{ title:"Lệch quỹ < 50,000đ", body:"Ghi chú vào sổ tay kế toán. Nhắc nhở thu ngân chú ý đếm tiền lẻ." },
+  "diff-max":{ title:"Lệch quỹ > 50,000đ", body:"Lập Biên bản sai lệch. Yêu cầu Trưởng ca ký xác nhận.\nSố tiền thiếu sẽ bị cấn trừ thẳng vào lương thu ngân cuối tháng." },
+  
+  "inv-ok":{ title:"Hao hụt kho < 1%", body:"Được tính là hao hụt tự nhiên (bay hơi, rơi vãi, dính xoong chảo). Ghi nhận bình thường." },
+  "inv-warn":{ title:"Hao hụt kho 1-3%", body:"Lỗi do quy trình/thao tác. Gửi cảnh báo yêu cầu Quán/Bếp rà soát lại khâu cân đong." },
+  "inv-danger":{ title:"Hao hụt kho > 3%", body:"Báo động gian lận/thất thoát. Lên lịch kiểm kê kho đột xuất và yêu cầu trích xuất Camera khu vực Bếp." }
+};
+
+const FLOW_DATA2 = {
+  "exp-gather":{ title:"① Tập hợp Phiếu Chi (13:30)", body:"Thu thập hình ảnh chứng từ chi tại quán, hóa đơn mua hàng từ NCC chuyển về." },
+  "exp-verify":{ title:"② Xác minh tính hợp lệ", body:"Kiểm tra:\n- Dấu mộc/Chữ ký người bán.\n- Chữ ký phê duyệt nội bộ.\n- So khớp số tiền." },
+  "exp-class":{ title:"③ Phân bổ P&L", body:"Nhập liệu vào phần mềm:\n1. Giá vốn (Mua gia vị, đá)\n2. Nhân sự (Lương, ứng)\n3. Vận hành (Điện nước)\n4. Khác." },
+  "sys-clean":{ title:"④ Dọn dẹp KiotViet", body:"- Check phiếu 'Đang chuyển' hàng hóa giữa BTT và Quán.\n- Ép Quán bấm nhận.\n- Xóa/hủy các phiếu sai." },
+  "evening-rep":{ title:"⑤ Kết thúc ca & Quản trị", body:"Cập nhật chi phí vào P&L.\nLên kế hoạch kiểm kho cuối tuần nếu cần.\nThoát hệ thống." },
+  
+  "exp-ok":{ title:"Chứng từ Hợp lệ", body:"Ghi nhận giảm quỹ tiền mặt và tăng chi phí tương ứng. Lưu trữ chứng từ cẩn thận." },
+  "exp-fail":{ title:"Thiếu Chứng từ / Vi phạm", body:"Kế toán có quyền TỪ CHỐI thanh toán/chi. Báo lại cho Quản lý biết cá nhân tự ứng tiền phải chịu trách nhiệm." }
+};
+
+// ── TRẠNG THÁI ────────────────────────────────────────────────────────
+let isAdmin = false;
+let selectedTask = 0;
+let checkStates = {};
+let taskStatuses = TASKS.map(t => t.status);
+
+// ── ĐỒNG HỒ ───────────────────────────────────────────────────────────
+function updateClock(){
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString('vi-VN',{hour12:false});
+  document.getElementById('sdate').textContent = now.toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+document.getElementById('rec-date').valueAsDate = new Date(new Date().setDate(new Date().getDate() - 1));
+
+// ── ĐIỀU HƯỚNG ─────────────────────────────────────────────────────────
+function go(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const map=['dashboard','tasks','sop','flow','handover','report','schedule','docs','standards','ai-chat'];
+  const ni=document.querySelectorAll('.nav-item');
+  const idx=map.indexOf(id);
+  if(idx>=0&&ni[idx]) ni[idx].classList.add('active');
+  if(id==='tasks') { renderTaskList(); renderTaskDetail(selectedTask); }
+  if(id==='sop') renderSOPGrid();
+  if(id==='dashboard') renderDashTasks();
+}
+
+// ── BẢNG ĐIỀU KHIỂN ────────────────────────────────────────────────────
+function renderDashTasks(){
+  const done=taskStatuses.filter(s=>s==='done').length;
+  const active = taskStatuses.filter(s=>s==='active').length;
+  const wait = taskStatuses.filter(s=>s==='wait').length;
+  const late = taskStatuses.filter(s=>s==='late').length;
+  const total = TASKS.length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-active').textContent = active;
+  document.getElementById('stat-late').textContent = late;
+  const pct = total === 0 ? 0 : Math.round(done / total * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%'; 
+  
+  const waiting=wait+active; 
+  document.getElementById('badge-tasks').textContent= waiting > 0 ? waiting : ''; 
+  document.getElementById('badge-tasks').style.display = waiting > 0 ? 'inline-block' : 'none';
+  
+  let html=''; 
+  TASKS.forEach((t,i)=>{ 
+    const s=taskStatuses[i]; 
+    const tags={
+      done:'<span class="tr-tag tag-done">Đã duyệt</span>',
+      active:'<span class="tr-tag tag-active">Đang soát</span>',
+      wait:'<span class="tr-tag tag-wait">Chờ soát</span>',
+      late:'<span class="tr-tag tag-late">Trễ hạn</span>'
+    }; 
+    html+=`<div class="task-row is-${s}" onclick="openTaskFromDash(${i})"> 
+      <div class="tr-check">${s==='done'?'✓':''}</div> 
+      <span class="tr-time">${t.time}</span> 
+      <span class="tr-name">${t.name}</span> 
+      ${tags[s]} 
+    </div>`; 
+  }); 
+  document.getElementById('dash-tasks').innerHTML=html; 
+} 
+
+function openTaskFromDash(idx){ 
+  selectedTask=idx; 
+  go('tasks'); 
+} 
+
+// ── NHIỆM VỤ ĐỐI SOÁT ──────────────────────────────────────────────────
+let taskFilter='all'; 
+
+function filterTasks(f,btn){ 
+  taskFilter=f; 
+  document.querySelectorAll('.tl-f-btn').forEach(b=>b.classList.remove('active')); 
+  btn.classList.add('active'); 
+  renderTaskList(); 
+} 
+
+function renderTaskList(){ 
+  const panel=document.getElementById('task-list-panel'); 
+  const statusColors={done:'dot-done',active:'dot-active',wait:'dot-wait',late:'dot-late'}; 
+  let filtered=TASKS.filter((_,i)=>{ 
+    const s=taskStatuses[i]; 
+    if(taskFilter==='all') return true; 
+    if(taskFilter==='wait') return s==='wait'||s==='active'; 
+    return s===taskFilter; 
+  }); 
+  let html=`<div class="tl-head">Hạng mục đối soát: <span style="color:var(--blue);margin:0 4px">${filtered.length}</span></div>`; 
+  TASKS.forEach((t,i)=>{ 
+    const s=taskStatuses[i];
+    if(taskFilter!=='all'&&((taskFilter==='wait'&&s!=='wait'&&s!=='active')||(taskFilter!=='wait'&&s!==taskFilter))) return;
+    html+=`<div class="tl-item${i===selectedTask?' sel':''}" onclick="selectTask(${i},this)">
+    <div class="tl-item-top"><div class="tli-dot ${statusColors[s]}"></div><span class="tli-name">${t.name}</span></div>
+    <div class="tli-time">Deadline: ${t.time} · Ca ${t.ca}</div>
+    </div>`;
+  });
+  panel.innerHTML=html;
+}
+
+function selectTask(idx,el){
+  selectedTask=idx;
+  renderTaskList();
+  renderTaskDetail(idx);
+}
+
+function renderTaskDetail(idx){
+  const t=TASKS[idx];
+  const panel=document.getElementById('task-detail-panel');
+  if(!t){panel.innerHTML='<div style="padding:40px;text-align:center;color:var(--ink2)">← Chọn hạng mục</div>';return;}
+  const cs=checkStates[idx]||{};
+  const doneCount=Object.values(cs).filter(Boolean).length;
+  const total=t.checks.length;
+  const pct=total?Math.round(doneCount/total*100):0;
+  const s=taskStatuses[idx];
+  const statusTag={
+    done:'<span class="tr-tag tag-done">Đã đối soát xong</span>',
+    active:'<span class="tr-tag tag-active">Đang kiểm tra</span>',
+    wait:'<span class="tr-tag tag-wait">Chờ xử lý</span>',
+    late:'<span class="tr-tag tag-late">Trễ hạn báo cáo</span>'
+  };
+  
+  let fHtml='<div class="flow-wrap">';
+  t.flow.forEach((step,i)=>{
+    fHtml+=`<div class="f-node" title="${step[1]}">${step[0]}</div>`;
+    if(i<t.flow.length-1) fHtml+='<span class="f-arr">→</span>';
+  });
+  fHtml+='</div>';
+  
+  let ckHtml=`<div class="ck-prog"><div class="ck-prog-bar"><div class="ck-prog-fill" style="width:${pct}%"></div></div><span class="ck-prog-txt">${doneCount}/${total}</span></div><div class="ck-list">`;
+  t.checks.forEach((c,i)=>{
+    const done=cs[i];
+    ckHtml+=`<div class="ck-item${done?' done':''}" onclick="toggleCk(${idx},${i})"><div class="ck-box">${done?'<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div><span class="ck-label">${c}</span></div>`;
+  });
+  ckHtml+='</div>';
+  
+  let stdHtml='<div class="std-list">';
+  t.standards.forEach(s=>{stdHtml+=`<div class="std-item"><span class="std-k">${s[0]}</span><span class="std-v">${s[1]}</span></div>`;});
+  stdHtml+='</div>';
+  
+  let scHtml='<div class="sc-list">';
+  t.scenarios.forEach((sc,i)=>{
+    scHtml+=`<div class="sc-item" id="sc${idx}-${i}"><div class="sc-q" onclick="document.getElementById('sc${idx}-${i}').classList.toggle('open')">${sc[0]} <span class="sc-icon">▾</span></div><div class="sc-a">${sc[1].replace(/\n/g,'<br>')}</div></div>`;
+  });
+  scHtml+='</div>';
+  
+  const editBtn=isAdmin?`<button class="edit-badge" onclick="toast('Tính năng KT Trưởng: Chỉnh sửa Quy trình')">Chỉnh sửa nội quy</button>`:'';
+  
+  panel.innerHTML=`
+  <div class="td-top"><div><div class="td-title">${t.name}</div></div>${editBtn}</div>
+  <div class="td-meta">${statusTag[s]} <span>Deadline: ${t.time}</span></div>
+  <div class="td-desc">${t.desc}</div>
+  <div class="sec-label">Quy trình đối soát</div>${fHtml}
+  <div class="sec-label">Checklist dữ liệu</div>${ckHtml}
+  <div class="sec-label">Mốc chuẩn & Cảnh báo</div>${stdHtml}
+  <div class="sec-label">Lỗi hay gặp & Hướng xử lý</div>${scHtml}
+  <div class="act-bar">
+    <button class="btn btn-green" onclick="markDone(${idx})">✓ Hoàn tất đối soát</button>
+    <button class="btn btn-blue" onclick="go('handover')">Ghi nhận số liệu →</button>
+    ${s==='done'?`<button class="btn" onclick="reopen(${idx})">Mở lại soát xét</button>`:''}
+  </div>`;
+}
+
+function toggleCk(taskIdx,ckIdx){
+  if(!checkStates[taskIdx]) checkStates[taskIdx]={};
+  checkStates[taskIdx][ckIdx]=!checkStates[taskIdx][ckIdx];
+  renderTaskDetail(taskIdx);
+}
+
+function markDone(idx){
+  taskStatuses[idx]='done';
+  renderTaskList();
+  renderTaskDetail(idx);
+  renderDashTasks();
+  toast('✓ Đã chốt số liệu đối soát hạng mục này.');
+}
+
+function reopen(idx){
+  taskStatuses[idx]='wait';
+  renderTaskList();
+  renderTaskDetail(idx);
+  renderDashTasks();
+}
+
+// ── SOP ───────────────────────────────────────────────────────────────
+const catColors={'Doanh Thu':'blue','Kho & Hàng':'green','Chi Phí':'amber','Nhân sự':'purple'};
+const catStyle={'blue':'color:var(--blue)','green':'color:var(--green)','amber':'color:var(--amber)','purple':'color:var(--purple)'};
+
+function renderSOPGrid(){
+  let html='';
+  SOPS.forEach((s,i)=>{
+    const col=catStyle[catColors[s.cat]]||'';
+    html+=`<div class="sop-card" onclick="showSOP(${i})">
+    <div class="sop-cat" style="${col}">${s.cat}</div>
+    <div class="sop-name">${s.name}</div>
+    <div class="sop-meta">${s.meta}</div>
+    </div>`;
+  });
+  document.getElementById('sop-grid').innerHTML=html;
+}
+
+function showSOP(idx){
+  const s=SOPS[idx];
+  let html=`<div class="ph"><div class="ph-title">${s.name}</div><div class="ph-sub">${s.meta}</div></div><div class="card"><div>`;
+  s.steps.forEach((step,i)=>{
+    html+=`<div class="sop-step"><div class="sop-num">${i+1}</div><div><div class="sop-step-title">${step[0]}</div><div class="sop-step-body">${step[1]}</div></div></div>`;
+  });
+  html+=`</div>${s.note?`<div class="sop-note">⚠ Ghi chú Kế toán: ${s.note}</div>`:''}</div>`;
+  document.getElementById('sop-detail-body').innerHTML=html;
+  document.getElementById('sop-list').style.display='none';
+  document.getElementById('sop-detail').style.display='block';
+}
+
+function sopBack(){
+  document.getElementById('sop-list').style.display='block';
+  document.getElementById('sop-detail').style.display='none';
+}
+
+// ── LUỒNG LÀM VIỆC ────────────────────────────────────────────────────
+function fd(key){
+  const d=FLOW_DATA[key];
+  if(!d) return;
+  const box=document.getElementById('flow-detail-box');
+  document.getElementById('fdb-title').textContent=d.title;
+  document.getElementById('fdb-body').textContent=d.body;
+  box.classList.add('vis');
+}
+function fd2(key){
+  const d=FLOW_DATA2[key];
+  if(!d) return;
+  const box=document.getElementById('flow-detail-box2');
+  document.getElementById('fdb-title2').textContent=d.title;
+  document.getElementById('fdb-body2').textContent=d.body;
+  box.classList.add('vis');
+}
+
+// ── ĐỐI SOÁT & TRÍCH XUẤT ẢNH (OCR + EXCEL) ───────────────────────────
+
+let reconDataCache = {
+    cash: { posVal: 0, actualVal: 0, diff: 0, status: "", note: "" },
+    bank: { posVal: 0, actualVal: 0, diff: 0, status: "", note: "" },
+    app:  { posVal: 0, actualVal: 0, diff: 0, status: "", note: "" }
+};
+
+function calcDiffRow(posId, actualId, diffId) {
+    const posVal = parseInt(document.getElementById(posId).value) || 0;
+    const actualVal = parseInt(document.getElementById(actualId).value) || 0;
+    const el = document.getElementById(diffId);
+    
+    if(!posVal && !actualVal) {
+        el.textContent = "—";
+        el.className = "";
+        return { posVal, actualVal, diff: 0, status: "Trống" };
+    }
+    
+    const diff = actualVal - posVal; // Thực tế - POS. Âm = thiếu tiền.
+    let statusText = "";
+
+    if(diff === 0) {
+        el.textContent = "Khớp 100%";
+        el.className = "diff-ok";
+        statusText = "Khớp";
+    } else if (Math.abs(diff) <= 50000) {
+        el.textContent = (diff > 0 ? '+' : '') + diff.toLocaleString('vi-VN') + 'đ (Sai nhẹ)';
+        el.className = "diff-ok";
+        statusText = "Lệch nhẹ (Dưới 50k)";
+    } else {
+        el.textContent = (diff > 0 ? '+' : '') + diff.toLocaleString('vi-VN') + 'đ (LỆCH LỚN)';
+        el.className = "diff-bad";
+        statusText = "Lệch lớn (Cần đền bù)";
+    }
+    return { posVal, actualVal, diff, status: statusText };
+}
+
+function calcRecon(){
+  const cashData = calcDiffRow('pos-cash', 'actual-cash', 'diff-cash');
+  const bankData = calcDiffRow('pos-bank', 'actual-bank', 'diff-bank');
+  const appData  = calcDiffRow('pos-app', 'actual-app', 'diff-app');
+  
+  // Update Cache to preserve notes
+  reconDataCache.cash = { ...cashData, note: document.getElementById('note-cash') ? document.getElementById('note-cash').value : cashData.status };
+  reconDataCache.bank = { ...bankData, note: document.getElementById('note-bank') ? document.getElementById('note-bank').value : bankData.status };
+  reconDataCache.app  = { ...appData,  note: document.getElementById('note-app') ? document.getElementById('note-app').value : appData.status };
+  
+  updateExcelTable();
+  
+  // Cập nhật lên báo cáo bên trang Báo cáo tự động
+  updateReportSummary();
+}
+
+function updateExcelTable() {
+  const tbody = document.getElementById('excel-tbody');
+  
+  tbody.innerHTML = `
+    <tr>
+        <td>1. Tiền Mặt</td>
+        <td class="td-money">${reconDataCache.cash.posVal.toLocaleString('vi-VN')}</td>
+        <td class="td-money">${reconDataCache.cash.actualVal.toLocaleString('vi-VN')}</td>
+        <td class="td-money" style="color:${reconDataCache.cash.diff<0?'var(--red)':'var(--green)'}">${reconDataCache.cash.diff.toLocaleString('vi-VN')}</td>
+        <td><input type="text" id="note-cash" class="inline-input" value="${reconDataCache.cash.note}" onblur="saveNotes()" placeholder="Ghi chú nguyên nhân..."></td>
+    </tr>
+    <tr>
+        <td>2. Ngân Hàng</td>
+        <td class="td-money">${reconDataCache.bank.posVal.toLocaleString('vi-VN')}</td>
+        <td class="td-money">${reconDataCache.bank.actualVal.toLocaleString('vi-VN')}</td>
+        <td class="td-money" style="color:${reconDataCache.bank.diff<0?'var(--red)':'var(--green)'}">${reconDataCache.bank.diff.toLocaleString('vi-VN')}</td>
+        <td><input type="text" id="note-bank" class="inline-input" value="${reconDataCache.bank.note}" onblur="saveNotes()" placeholder="Ghi chú nguyên nhân..."></td>
+    </tr>
+    <tr>
+        <td>3. Merchant App</td>
+        <td class="td-money">${reconDataCache.app.posVal.toLocaleString('vi-VN')}</td>
+        <td class="td-money">${reconDataCache.app.actualVal.toLocaleString('vi-VN')}</td>
+        <td class="td-money" style="color:${reconDataCache.app.diff<0?'var(--red)':'var(--green)'}">${reconDataCache.app.diff.toLocaleString('vi-VN')}</td>
+        <td><input type="text" id="note-app" class="inline-input" value="${reconDataCache.app.note}" onblur="saveNotes()" placeholder="Ghi chú nguyên nhân..."></td>
+    </tr>
+  `;
+}
+
+function saveNotes() {
+    reconDataCache.cash.note = document.getElementById('note-cash').value;
+    reconDataCache.bank.note = document.getElementById('note-bank').value;
+    reconDataCache.app.note = document.getElementById('note-app').value;
+    updateReportSummary();
+}
+
+function updateReportSummary() {
+    const totalRev = reconDataCache.cash.actualVal + reconDataCache.bank.actualVal + reconDataCache.app.actualVal;
+    const errorType = document.getElementById('error-type') ? document.getElementById('error-type').value : '';
+    const errorNote = document.getElementById('error-note') ? document.getElementById('error-note').value : '';
+    
+    let errorString = errorType ? `\n- SỰ CỐ KHÁC: [${errorType}] ${errorNote}` : '';
+
+    let text = `BÁO CÁO TỔNG HỢP NGÀY:
+- Tổng doanh thu hệ thống: ${totalRev.toLocaleString('vi-VN')}đ
+- Tiền mặt: ${reconDataCache.cash.note}
+- Bank/Momo: ${reconDataCache.bank.note}
+- App (Grab/Shopee): ${reconDataCache.app.note}${errorString}
+- Phiếu xuất treo: 0`;
+
+    document.getElementById('report-summary').value = text;
+}
+
+// ── TÍCH HỢP GOOGLE SHEET ─────────────────────────────────────────────
+async function saveToGoogleSheet() {
+    const btn = document.getElementById('btn-save-sheet');
+    const orgText = btn.innerHTML;
+    btn.innerHTML = "Đang đồng bộ...";
+    btn.disabled = true;
+    
+    const dateVal = document.getElementById('rec-date').value;
+    const branchVal = document.getElementById('rec-branch').value;
+    const reporterVal = document.getElementById('rec-reporter').value;
+
+    const payload = [
+        { date: dateVal, branch: branchVal, reporter: reporterVal, category: "1. Tiền Mặt", pos: reconDataCache.cash.posVal, actual: reconDataCache.cash.actualVal, diff: reconDataCache.cash.diff, note: reconDataCache.cash.note },
+        { date: dateVal, branch: branchVal, reporter: reporterVal, category: "2. Ngân Hàng", pos: reconDataCache.bank.posVal, actual: reconDataCache.bank.actualVal, diff: reconDataCache.bank.diff, note: reconDataCache.bank.note },
+        { date: dateVal, branch: branchVal, reporter: reporterVal, category: "3. Merchant App", pos: reconDataCache.app.posVal, actual: reconDataCache.app.actualVal, diff: reconDataCache.app.diff, note: reconDataCache.app.note }
+    ];
+
+    // Push thêm dòng Lỗi/Sự cố nếu kế toán có nhập
+    const errorType = document.getElementById('error-type').value;
+    const errorNote = document.getElementById('error-note').value;
+    if (errorType !== "") {
+        payload.push({
+            date: dateVal, branch: branchVal, reporter: reporterVal, 
+            category: "4. SỰ CỐ GHI NHẬN: " + errorType, 
+            pos: 0, actual: 0, diff: 0, 
+            note: errorNote
+        });
+    }
+
+    if (GOOGLE_SHEET_WEBAPP_URL !== "") {
+        try {
+            const response = await fetch(GOOGLE_SHEET_WEBAPP_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Avoid CORS errors with simple GAS setups
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+            toast('✓ Đã đẩy dữ liệu lên Google Sheet thành công!');
+        } catch (error) {
+            toast('Lỗi khi lưu lên Sheet. Hãy kiểm tra lại URL.');
+        }
+    } else {
+        toast('Vui lòng cung cấp URL Google Apps Script hợp lệ.');
+    }
+    
+    btn.innerHTML = "✓ Đã Đồng Bộ";
+    setTimeout(() => { btn.innerHTML = orgText; btn.disabled = false; }, 3000);
+}
+
+function exportToExcel() {
+  let csvContent = "\uFEFF"; 
+  csvContent += "Ngày Giao Dịch,Chi Nhánh,Hạng Mục Đối Soát,Hệ Thống Ghi Nhận (VNĐ),Thực Tế Nhận (VNĐ),Chênh Lệch (VNĐ),Ghi Chú Nguyên Nhân\r\n";
+  
+  const dateVal = document.getElementById('rec-date').value;
+  const branchVal = document.getElementById('rec-branch').value;
+  
+  const rows = [
+      [dateVal, branchVal, "1. Tiền Mặt", reconDataCache.cash.posVal, reconDataCache.cash.actualVal, reconDataCache.cash.diff, `"${reconDataCache.cash.note}"`],
+      [dateVal, branchVal, "2. Ngân Hàng", reconDataCache.bank.posVal, reconDataCache.bank.actualVal, reconDataCache.bank.diff, `"${reconDataCache.bank.note}"`],
+      [dateVal, branchVal, "3. Merchant App", reconDataCache.app.posVal, reconDataCache.app.actualVal, reconDataCache.app.diff, `"${reconDataCache.app.note}"`]
+  ];
+
+  const errorType = document.getElementById('error-type').value;
+  const errorNote = document.getElementById('error-note').value;
+  if(errorType !== "") {
+      rows.push([dateVal, branchVal, "4. SỰ CỐ: " + errorType, 0, 0, 0, `"${errorNote}"`]);
+  }
+
+  rows.forEach(r => { csvContent += r.join(",") + "\r\n"; });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", `Bao_Cao_Doi_Soat_${dateVal}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  toast('✓ Đã tải xuống file CSV');
+}
+
+// ── COPY BÁO CÁO (Thay thế gửi Zalo) ──────────────────────────────────
+function copyReport(){
+  const textToCopy = document.getElementById('report-summary').value;
+  const textArea = document.createElement("textarea");
+  textArea.value = textToCopy;
+  document.body.appendChild(textArea);
+  textArea.select();
+  
+  try {
+    document.execCommand('copy');
+    toast('✓ Đã COPY Báo cáo vào khay nhớ tạm. Bạn có thể dán vào Zalo/Viber!');
+  } catch (err) {
+    toast('❌ Lỗi copy, vui lòng bôi đen và copy thủ công.');
+  }
+  document.body.removeChild(textArea);
+}
+
+function toggleIssue(){ 
+  const s=document.getElementById('rep-status').value; 
+  document.getElementById('rep-issue-field').style.display=s.includes('sự cố')||s.includes('Lệch lớn')||s.includes('lệch')?'block':'none'; 
+} 
+
+// ── PHÂN QUYỀN VAI TRÒ ────────────────────────────────────────────────
+function toggleRole(){ 
+  isAdmin=!isAdmin; 
+  const pill = document.getElementById('role-pill'); 
+  document.getElementById('role-label').textContent = isAdmin?'KT Trưởng':'KT Chi nhánh'; 
+  document.getElementById('switch-to').textContent = isAdmin?'KT Chi nhánh':'KT Trưởng'; 
+  pill.className = 'role-pill ' + (isAdmin?'admin':'staff'); 
+  
+  if (document.getElementById('page-tasks').classList.contains('active')) renderTaskDetail(selectedTask); 
+} 
+
+// ── LIÊN HỆ KHẨN CẤP (SOS) ─────────────────────────────────────────────
+function openSOS(){document.getElementById('emer-panel').classList.add('open');} 
+function closeEmer(){document.getElementById('emer-panel').classList.remove('open');} 
+
+// ── TRỢ LÝ AI GEMINI ──────────────────────────────────────────────────
+// Gemini API Configuration
+const apiKey = ""; // API key is injected by the environment
+const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";
+
+const SYSTEM_PROMPT = `Bạn là Trợ lý AI Hỗ trợ Kế Toán Tổng Hợp của Hệ thống Cơm Tấm Làng. 
+Hãy trả lời câu hỏi nghiệp vụ dựa trên các quy định nội bộ sau, NGẮN GỌN, CHÍNH XÁC:
+
+1. ĐỐI SOÁT DOANH THU & TIỀN MẶT:
+- Deadline chốt doanh thu hôm qua: Trước 10:00 Sáng hôm nay.
+- Lệch tiền mặt < 50.000đ: Kế toán ghi sổ theo dõi.
+- Lệch tiền mặt > 50.000đ: Kế toán lập biên bản, yêu cầu thu ngân đền bù 100% trừ vào lương. Kế toán KHÔNG tự ý sửa số POS.
+- Khách chuyển khoản giả: KHÔNG ghi nhận doanh thu nếu tiền chưa vào sao kê.
+- Bill Hủy/Void: Quá 3% tổng bill phải bắt Trưởng ca giải trình.
+
+2. ĐỐI SOÁT XUẤT NHẬP TỒN (KHO):
+- Phiếu điều chuyển: Kế toán ép Quán phải bấm nhận hàng, tuyệt đối không để phiếu "Đang chuyển" tồn tại quá 24h.
+- Hao hụt cân nặng lúc nhập: Sai số tối đa 0.1kg.
+- Hao hụt sản xuất: < 1% (Hao hụt tự nhiên, ghi vào chi phí). Từ 1-3% (Lỗi quy trình, bắt Bếp rà soát). > 3% (Gian lận, kiểm kê đột xuất, check Cam).
+- Nguyên tắc xuất kho: FIFO (Nhập trước - Xuất trước).
+
+3. ĐỐI SOÁT CHI PHÍ:
+- Chi phí >= 20.000đ bắt buộc phải có Hóa đơn bán lẻ / chữ ký duyệt. Kế toán từ chối chi nếu thiếu.
+- Trưởng ca chỉ được quyền tự xuất chi tiêu tại quán < 500.000đ. >= 500k phải hỏi Chủ quán.
+
+Tuyệt đối không giải thích dài dòng. Luôn nói đúng định mức phạt/thời hạn nêu trên. Trả lời bằng tiếng Việt.`;
+
+let chatHistory = []; 
+
+async function fetchWithRetry(url, options, retries = 5) {
+  const delays = [1000, 2000, 4000, 8000, 16000];
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url, options);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      if (i === retries - 1) throw e;
+      await new Promise(r => setTimeout(r, delays[i]));
+    }
+  }
+}
+
+async function callAI(userMsg) { 
+  const contents = chatHistory.map(msg => ({
+    role: msg.role === 'bot' ? 'model' : 'user',
+    parts: [{ text: msg.content }]
+  }));
+  
+  contents.push({ role: 'user', parts: [{ text: userMsg }] });
+  
+  const payload = {
+    contents: contents,
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] }
+  };
+
+  const responseData = await fetchWithRetry(`/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  
+  const reply = responseData.candidates?.[0]?.content?.parts?.[0]?.text || 'Hệ thống AI đang quá tải. Xin vui lòng thử lại sau.';
+  
+  chatHistory.push({ role: 'user', content: userMsg }); 
+  chatHistory.push({ role: 'bot', content: reply }); 
+  if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20); 
+  
+  return reply; 
+} 
+
+function appendMsg(role, text) { 
+  const box = document.getElementById('chat-msgs'); 
+  const div = document.createElement('div'); 
+  div.className = 'ai-msg ai-msg-' + role; 
+  const avatar = role === 'bot' ? 'AI' : 'Bạn'; 
+  const formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); 
+  div.innerHTML = `<div class="ai-avatar">${avatar}</div><div class="ai-bubble">${formatted}</div>`; 
+  box.appendChild(div); 
+  box.scrollTop = box.scrollHeight; 
+} 
+
+function showTyping() { 
+  const box = document.getElementById('chat-msgs'); 
+  const div = document.createElement('div'); 
+  div.className = 'ai-msg ai-msg-bot'; 
+  div.id = 'typing-indicator'; 
+  div.innerHTML = `<div class="ai-avatar">AI</div><div class="ai-bubble"><div class="ai-typing"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div></div>`; 
+  box.appendChild(div); 
+  box.scrollTop = box.scrollHeight; 
+} 
+
+function hideTyping() { 
+  const el = document.getElementById('typing-indicator'); 
+  if (el) el.remove(); 
+} 
+
+async function sendChat() { 
+  const input = document.getElementById('chat-input'); 
+  const msg = input.value.trim(); 
+  if (!msg) return; 
+  
+  input.value = ''; 
+  document.getElementById('send-btn').disabled = true; 
+  document.getElementById('ai-status-dot').style.background = 'var(--amber)'; 
+  document.getElementById('ai-status-text').textContent = 'AI đang tra cứu dữ liệu...'; 
+  
+  appendMsg('user', msg); 
+  showTyping(); 
+  
+  try { 
+    const reply = await callAI(msg); 
+    hideTyping(); 
+    appendMsg('bot', reply); 
+  } catch(e) { 
+    hideTyping(); 
+    appendMsg('bot', 'Có lỗi kết nối mạng. Vui lòng thử lại sau.'); 
+  } 
+  
+  document.getElementById('send-btn').disabled = false; 
+  document.getElementById('ai-status-dot').style.background = 'var(--green)'; 
+  document.getElementById('ai-status-text').textContent = 'AI sẵn sàng'; 
+} 
+
+function quickAsk(msg) { 
+  document.getElementById('chat-input').value = msg; 
+  go('ai-chat');
+  sendChat(); 
+} 
+
+function clearChat() { 
+  chatHistory = []; 
+  document.getElementById('chat-msgs').innerHTML = `<div class="ai-msg ai-msg-bot"><div class="ai-avatar">AI</div><div class="ai-bubble">Lịch sử chat đã xóa. Kế toán cần hỏi thêm về chỉ số nào?</div></div>`; 
+} 
+
+// Khởi tạo
+renderDashTasks(); 
+renderSOPGrid(); 
+renderTaskList(); 
+renderTaskDetail(0); 
+updateExcelTable();
+
+// Gắn sự kiện thay đổi lỗi khác để cập nhật realtime báo cáo
+document.getElementById('error-type').addEventListener('change', updateReportSummary);
+document.getElementById('error-note').addEventListener('input', updateReportSummary);
+</script>
+</body>
+</html>
